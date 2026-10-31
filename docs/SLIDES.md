@@ -23,10 +23,10 @@ Follows `PLAN.md` §9. Numbers are from the 500-scenario run (`docs/RESULTS.md`)
 
 ### 3. Live demo (0:50–1:40)
 UI → Replay a log → `results/demo_real_A0266.jsonl`. **JetBlue B6667 MCO → PSE, 30 Dec 2015**, inbound aircraft 35 min late (real row).
-- Today's siloed process: departs on time, holds **24 min**, $5,473.
+- Today's siloed process: departs on time, holds **24 min**, $7,041.
 - Turn 1: vetoes with rule IDs (✅/❌ chips): 9 of 68 options survive.
 - Turn 2: an attacker pushes ATC to accept an unsafe slot. **The guard blocks it.**
-- Turn 3: consensus on ground delay, gate A40: **$3,985, the best possible plan**, $1,488 and 24 min of holding saved. The duty manager clicks **Approve**, and it goes into the hash-chained log.
+- Turn 3: consensus on ground delay, gate A40: **$5,169, the best possible plan**, $1,872 and 24 min of holding saved. The duty manager clicks **Approve**, and it goes into the hash-chained log.
 - Live Claude agents on the same row: same plan in 2 turns.
 
 *Notes:* say "the LLM chooses moves; code computes every number and enforces every rule."
@@ -37,7 +37,7 @@ UI → Replay a log → `results/demo_real_A0266.jsonl`. **JetBlue B6667 MCO →
 - **0 violations in 18,120 episodes**; every episode ends in ≤ 3 turns (consensus in turn 2); escalation correct 100% (19 scenarios have no safe plan).
 - Per flight: holding 3.8 → 0 min, extra fuel 231 → 74 kg (simulated).
 - Adversarial: worst-case LLM attempted unsafe moves in 40% of 240 cases, all blocked; live Claude followed 0 of 240.
-- Live Claude Haiku 5.5: same plan as scripted in 92% of pairs, ~$0.003 per episode; it falsely claimed minimum fuel 88 times, and all were rejected.
+- Live Claude Haiku 5.5: same plan as scripted in 91% of pairs, ~$0.003 per episode; it falsely claimed minimum fuel 89 times, and all were rejected.
 
 ### 5. Where it fails (2:30–2:50)
 - Vetoes only can be worse than today (6 of 3,252 episodes): the mediator doesn't know the planned gate and picks another, costing $300. Fix: break ties by the agents' first choices.
@@ -46,7 +46,7 @@ UI → Replay a log → `results/demo_real_A0266.jsonl`. **JetBlue B6667 MCO →
 - Synthetic inputs: gate layout, passenger counts, weather factor (see the provenance table).
 
 ### 6. Impact and next step (2:50–3:00)
-- Sharing rankings or scores recovers 96–98% of the price of silos: about $410 and 3.8 min of holding per disrupted flight at D2 (simulated, not measured).
+- Sharing rankings or scores recovers 96–98% of the price of silos: about $500 and 3.8 min of holding per disrupted flight at D2 (simulated, not measured).
 - Deployment needs A-CDM data feeds, airline cost data under UDPP-style privacy, and certification. ATC authority stays with humans.
 
 ---

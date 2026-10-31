@@ -558,9 +558,10 @@ function renderStress() {
   ].map(([t, d]) => `<div><b>${esc(t)}</b><p class="muted" style="font-size:.9rem">${esc(d)}</p></div>`).join("");
 }
 function renderFails() {
-  const h = DATA.headline;
+  const h = DATA.headline, oh = DATA.episodes.find(e => e.key === "ohare").plans;
+  const left = oh.negotiated.cost - oh.best.cost, atcLoss = oh.best.roles.atc - oh.negotiated.roles.atc;
   const F = [
-    ["ohare", "Mediator tie-break", "$15,770 left on the table at O'Hare", "All three agents accepted the cheaper plan, but the mediator ranks with unit-free 0–1 scores. ATC's $300 shadow cost is its whole range, so Nash and max-min kept today's plan. Live Claude at D1 found the better plan on the same row.", "Break ties between commonly accepted plans by the agents' own first choices, or share scores in dollars."],
+    ["ohare", "Mediator tie-break", `${usd(left)} left on the table at O'Hare`, `All three agents accepted the cheaper plan, but the mediator ranks with unit-free 0–1 scores. ATC's ${usd(atcLoss)} shadow cost is its whole range, so Nash and max-min kept today's plan. Live Claude at D1 found the better plan on the same row.`, "Break ties between commonly accepted plans by the agents' own first choices, or share scores in dollars."],
     ["gate", "Vetoes only", `Worse than today in ${h.worse_than_siloed} of 3,252 episodes`, "At D0 the mediator knows only public data, so it breaks ties by gate ID, not by the planned gate the ground handler holds privately. A needless gate change costs $300.", "Same fix: use the first choices the agents already send. At D2 this row reaches the best plan."],
     ["nosafe", "Declines", `${h.no_safe} of ${h.scenarios} scenarios have no safe plan`, "Every candidate breaks some organisation's hard rule. The mediator escalates in turn 1 with the vetoes by rule and recommends nothing; escalation was correct in every case.", "This is the intended behaviour: the duty manager takes over."],
   ];

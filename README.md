@@ -53,8 +53,8 @@ Full write-up, demo and failure cases: **[docs/RESULTS.md](docs/RESULTS.md)**. T
 - **The price of silos is real:** in 56% of scenarios (271 of 481 solvable) today's siloed process costs more than the best plan.
 - **Negotiation recovers most of it:** vetoes only (D0) close **83%** of the gap; adding a ranking (D1) or scores (D2) closes **96–98%**; full data (D3) **96–100%**. FCFS with full data sharing closes 85%.
 - **Safety:** **0 hard-constraint violations** in 18,120 negotiated episodes. The system escalates exactly when no safe plan exists (19 scenarios), and in 240 adversarial cases with a worst-case LLM the guard blocked every unsafe move.
-- **Per disrupted flight (D2, Nash):** airborne holding 3.8 → 0.0 min, extra fuel 231 → 74 kg, simulated cost $7,948 → $7,537.
-- **Live Claude Haiku 5.5 agents** (120 episodes): 0 violations, same plan as scripted agents in 92% of pairs, ~$0.003 and ~13 s per episode. They falsely claimed minimum fuel 88 times; every claim was rejected by verification.
+- **Per disrupted flight (D2, Nash):** airborne holding 3.8 → 0.0 min, extra fuel 231 → 74 kg, simulated cost $9,727 → $9,224 (sourced A4A/IATA rates).
+- **Live Claude Haiku 5.5 agents** (120 episodes): 0 violations, same plan as scripted agents in 91% of pairs, ~$0.003 and ~13 s per episode. They falsely claimed minimum fuel 89 times; every claim was rejected by verification.
 - **Where it fails:** vetoes-only can pick a worse gate than today's process (6 of 3,252 episodes), and unit-free scores hide dollar magnitudes. Both are explained, with fixes, in the results doc.
 
 ## Data provenance
