@@ -1,3 +1,3 @@
-from baselines import best_possible, fcfs_rbs
+from baselines import best_possible, fcfs_rbs, siloed
 
-__all__ = ["best_possible", "fcfs_rbs"]
+__all__ = ["best_possible", "fcfs_rbs", "siloed"]

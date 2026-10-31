@@ -1,6 +1,6 @@
 import pytest
 
-from baselines import best_possible, fcfs_rbs
+from baselines import best_possible, fcfs_rbs, siloed
 from contracts import Gate, Option, SizeClass, WakeCategory
 from fixtures.build_fixtures import FIXTURES, episode_001, load
 from sim import check, check_all, evaluate, evaluate_all, generate_options, option_by_id, role_cost
@@ -33,7 +33,7 @@ def test_fixture_json_matches_builder(name):
 
 def test_options_are_deterministic_unique_and_view_independent(ep1):
     ids = [o.option_id for o in generate_options(ep1)]
-    assert len(ids) == len(set(ids)) == 150
+    assert len(ids) == len(set(ids)) == 140
     assert ids == [o.option_id for o in generate_options(episode_001())]
     for role in ("atc", "pilot", "ground"):
         assert [o.option_id for o in generate_options(ep1.view(role))] == ids
@@ -84,7 +84,8 @@ GOOD = "nominal@19:06/ground/B7"
 
 @pytest.mark.parametrize("rule_id", [
     "ATC-SLOT", "ATC-WAKE-LEAD", "ATC-WAKE-FOLLOW", "ATC-CAP", "ATC-TWY", "ATC-HOLD",
-    "PILOT-FUEL", "PILOT-DUTY", "PILOT-WX", "GND-GATE-FREE", "GND-GATE-SIZE", "GND-GATE-AIRLINE", "GND-CREW",
+    "PILOT-FUEL", "PILOT-DUTY", "PILOT-WX", "GND-GATE-FREE", "GND-GATE-SIZE", "GND-GATE-AIRLINE", "GND-NOTICE",
+    "GND-CREW",
 ])
 def test_good_option_passes_every_rule(ep1, rule_id):
     assert result(ep1, opt(ep1, GOOD), rule_id).passed
@@ -152,9 +153,23 @@ def test_ground_gate_airline(ep1):
     assert not result(s, o, "GND-GATE-AIRLINE").passed
 
 
+def test_ground_gate_change_needs_20_min_notice(ep1):
+    late = with_public(ep1, decision_point="airborne", decision_time_min=1140.0,
+                       routes=[ep1.public.routes[0].model_copy(update={"air_time_min": 5.0, "trip_fuel_kg": 200.0})])
+    r = result(late, opt(late, "nominal@19:06/airborne/B7"), "GND-NOTICE")  # in-block 19:17, 17 min notice
+    assert not r.passed and r.value == 17.0
+    assert result(late, opt(late, "nominal@19:06/airborne/A12"), "GND-NOTICE").passed  # planned gate kept
+
+
 def test_ground_crew_overtime_cap(ep1):
-    r = result(ep1, opt(ep1, "nominal@20:24/ground/A12"), "GND-CREW")
-    assert not r.passed and r.value == 73.0
+    long_turn = ep1.model_copy(update={"ground": ep1.ground.model_copy(update={"min_turnaround_min": 90.0})})
+    r = result(long_turn, opt(long_turn, GOOD), "GND-CREW")   # in-block 19:17, ready 20:47, shift ends 20:00
+    assert not r.passed and r.value == 47.0
+
+
+def test_next_shift_takes_flights_arriving_after_shift_end(ep1):
+    e = evaluate(ep1, opt(ep1, "nominal@20:24/ground/A12"))   # in-block 20:33, shift ended 20:00
+    assert e.outcome.ground.overtime_min == 0.0
 
 
 # ------------------------------------------------------------------ costs
@@ -192,6 +207,32 @@ def test_best_possible_never_worse_than_fcfs_and_always_feasible(name):
     if best.status == "plan":
         assert best.chosen.feasible and fcfs.chosen.feasible
         assert best.chosen.global_cost_usd <= fcfs.chosen.global_cost_usd
+
+
+@pytest.mark.parametrize("name", FIXTURES)
+def test_siloed_is_always_safe_and_never_beats_best(name):
+    s = load(name)
+    sil, best = siloed.plan(s), best_possible.plan(s)
+    assert sil.status == best.status
+    if sil.status == "plan":
+        assert sil.chosen.feasible and sil.chosen.global_cost_usd >= best.chosen.global_cost_usd
+
+
+def test_siloed_holds_in_the_air_when_limits_allow(ep1):
+    roomy = ep1.model_copy(update={
+        "atc": ep1.atc.model_copy(update={"max_holding_min": 60.0}),
+        "pilot": ep1.pilot.model_copy(update={"fuel_on_board_kg": 9000.0}),
+    })
+    sil, fcfs = siloed.plan(roomy), fcfs_rbs.plan(roomy)
+    assert sil.chosen.option.option_id == "nominal@19:18/airborne/D3"
+    assert fcfs.chosen.option.option_id == "nominal@19:18/ground/D3"
+    assert sil.chosen.global_cost_usd > fcfs.chosen.global_cost_usd
+    assert "phone calls" in sil.reason
+
+
+def test_siloed_falls_back_to_ground_delay_after_a_call(ep1):
+    r = siloed.plan(ep1)   # 33 min holding breaks fuel and the holding stack, so the call forces ground delay
+    assert r.chosen.option.option_id == "nominal@19:18/ground/D3"
 
 
 def test_episode_001_baselines(ep1):

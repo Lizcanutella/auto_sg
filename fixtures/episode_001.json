@@ -95,6 +95,7 @@
       1224.0
     ],
     "rbs_slot_min": 1158.0,
+    "ready_min": null,
     "weather_summary": "Thunderstorms at ATL 18:30-20:00 local. Arrival rate cut from 40 to 30 per hour; Ground Delay Program in effect. Moderate turbulence on the direct route over Tennessee."
   },
   "atc": {

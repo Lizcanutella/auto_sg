@@ -1,6 +1,8 @@
 """ATC hard constraints: slot validity, wake separation, capacity, taxiway closure, holding."""
 from __future__ import annotations
 
+import math
+
 from contracts import Option, RuleResult, Scenario, Timeline
 from sim import params
 from sim.rules._common import not_applicable, rule
@@ -19,7 +21,7 @@ def check(view: Scenario, option: Option, tl: Timeline | None = None) -> list[Ru
 
     public = view.public
     slot_ok = option.slot_min in public.available_slots_min or option.slot_min == public.rbs_slot_min
-    cap = int(atc.reduced_aar_per_hour + EPS)
+    cap = math.ceil(atc.reduced_aar_per_hour - EPS)   # a slot grid at 60/AAR spacing fits ceil(AAR) per 60 min
     zone = get_gate(public, option.gate_id).zone
     return [
         rule(ROLE, "ATC-SLOT", slot_ok, option.slot_min, None, "min", params.SLOT_SOURCE,
@@ -27,7 +29,7 @@ def check(view: Scenario, option: Option, tl: Timeline | None = None) -> list[Ru
         _wake("ATC-WAKE-LEAD", o.leader_gap_min, o.leader_required_min, "behind preceding arrival"),
         _wake("ATC-WAKE-FOLLOW", o.follower_gap_min, o.follower_required_min, "ahead of following arrival"),
         rule(ROLE, "ATC-CAP", o.arrivals_in_hour <= cap, o.arrivals_in_hour, cap, "arrivals/h",
-             params.CAPACITY_SOURCE, "arrivals in the landing hour vs reduced AAR"),
+             params.CAPACITY_SOURCE, "arrivals in the 60 min up to landing vs reduced AAR"),
         rule(ROLE, "ATC-TWY", zone not in atc.closed_taxiway_zones, None, None, "", params.TAXIWAY_SOURCE,
              f"gate zone {zone} is " + ("closed" if zone in atc.closed_taxiway_zones else "reachable")),
         rule(ROLE, "ATC-HOLD", o.holding_min <= atc.max_holding_min + EPS, o.holding_min,

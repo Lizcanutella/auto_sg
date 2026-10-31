@@ -54,11 +54,11 @@ With 2 people: **P0 only**, disclosure levels D0 + D2 only, LLM agents on a ≤5
 
 | ID | Task | Pri | Est | Depends on | Done when |
 |---|---|---|---|---|---|
-| **A-1** | Load DOT `flights.csv`: drop October (numeric airport codes) or map it; parse `hhmm` into timestamps; drop cancelled/diverted for chains | P0 | 1 | S-4 | Clean parquet saved; row counts logged |
-| **A-2** | Qualifying-row filter (`WEATHER_DELAY > 15` or `LATE_AIRCRAFT_DELAY > 20`) + stratified sample by airport/month/cause | P0 | 0.5 | A-1 | Sample of 500 focal rows with fixed seed |
-| **A-3** | Tail chains: next leg, turnaround slack, time on ground per airport | P0 | 1 | A-1 | Every focal row has a next leg or a flag saying none exists |
-| **A-4** | Competing arrivals: real flights into the same destination within ±60–90 min; base arrival rate from scheduled arrivals/hour | P0 | 0.75 | A-1 | Each scenario lists its neighbour flights |
-| **A-5** | Invented context (seeded): gates (count/size/zone), fuel on board, connecting passengers, ramp crew shifts, weather arrival-rate multiplier | P0 | 1.25 | A-3, A-4, S-2 | `scenarios.jsonl` with ≥100 track-A scenarios **by H3**, every field tagged with its provenance |
+| **A-1** | Load `flights.csv` (repo root, 358,774 rows, all qualifying, no October/cancelled/diverted) + workbook; put both `hhmm` times on the destination clock using `SCHEDULED_TIME`, handling arrivals after midnight | P0 | 1 | S-4 | Loader + workbook reader tested; row counts logged |
+| **A-2** | Stratified sample by airport size / month / cause (weather rows are only ~12%, so oversample them) | P0 | 0.5 | A-1 | Sample of 500 focal rows with fixed seed |
+| **A-3** | Tail chains: next leg in the file (real for 42% of rows) or synthetic next leg | P0 | 1 | A-1 | Every focal row has a next leg tagged real or synthetic |
+| **A-4** | Competing arrivals: delayed arrivals in the file (real) + synthetic filler up to the arrival rate (½ × workbook `max_runway_ops_per_hour`, cut for weather) | P0 | 0.75 | A-1 | Each scenario lists its neighbour flights, each tagged real or synthetic |
+| **A-5** | Context from the workbook (gates + spare gates, turnaround, fuel, crew duty, ramp shift, gate-change notice) + seeded draws (bookings, connections, report time); aircraft class heuristic | P0 | 1.25 | A-3, A-4, S-2 | `scenarios.jsonl` with ≥100 track-A scenarios **by H3**, every field tagged with its provenance |
 | **A-6** | FAA registry join: tail number → aircraft model → wake category; fall back to an airline/distance heuristic | P1 | 1 | A-1 | Match rate reported |
 | **A-7** | **Provenance table** (real / real-derived / external / invented, with assumptions), together with D | P0 | 0.5 | A-5 | In README and slides |
 | **A-8** | Simulator check: predicted knock-on delay vs recorded next-leg `LATE_AIRCRAFT_DELAY` (MAE, correlation) | P1 | 1 | A-3, B-3 | One number + scatter plot in the report |
@@ -73,10 +73,10 @@ With 2 people: **P0 only**, disclosure levels D0 + D2 only, LLM agents on a ≤5
 | ID | Task | Pri | Est | Depends on | Done when |
 |---|---|---|---|---|---|
 | **B-1** | Option generator: (slot, ground vs airborne delay, gate, route: nominal / reroute / divert) → 20–150 options | P0 | 1 | S-2, S-3 | Deterministic: same input gives same options |
-| **B-2** | Rule modules `rules/atc.py`, `pilot.py`, `ground.py`: each rule has an ID, source citation, `check()` → `RuleResult` | P0 | 1.5 | S-2 | Unit tests: one pass case and one fail case per rule |
+| **B-2** | Rule modules `rules/atc.py`, `pilot.py`, `ground.py`: each rule has an ID, source citation, `check()` → `RuleResult`. Values aligned to the organiser workbook, incl. the gate-change-notice rule | P0 | 1.5 | S-2 | Unit tests: one pass case and one fail case per rule |
 | **B-3** | Cost model: private cost per agent + global cost (delay $/min, fuel/CO₂, missed connections, overtime, knock-on delay) | P0 | 1 | B-1 | Costs for every option of the fixture; figures documented with sources |
 | **B-4** | Simulator: apply an option → slot sequence, holding, fuel at landing, gate timeline, next-leg delay | P0 | 1 | B-1, B-3 | Used by both baselines and the agents' tools |
-| **B-5** | **FCFS/RBS baseline** | P0 | 0.5 | B-4 | Produces a plan + cost for any scenario |
+| **B-5** | **FCFS/RBS baseline** + **siloed status-quo baseline** (`baselines/siloed.py`) | P0 | 0.5 | B-4 | Produces a plan + cost for any scenario ✅ |
 | **B-6** | **Best-possible solver** (enumerate options with all private data) | P0 | 0.5 | B-4 | Never chooses a plan that breaks a rule; always ≤ FCFS cost |
 | **B-7** | Review C's guards: every number an agent states must come from B's code | P0 | 0.5 | C-5 | Signed off in a PR comment |
 | **B-8** | Multi-flight best-possible solver with OR-Tools CP-SAT | P2 | 2 | B-6 | Solves 3+ focal flights jointly |

@@ -1,0 +1,501 @@
+scenario_id,flight_id,row,dest,size_class,cause,real_neighbours,next_leg
+A0000,WN2947-2015-09-29,299521,PHL,Medium hub,weather,3,real_derived
+A0001,VX360-2015-08-04,251597,BOS,Medium hub,weather,8,synthetic
+A0002,UA685-2015-02-26,65367,SFO,Medium hub,weather,16,synthetic
+A0003,UA255-2015-05-25,151863,DEN,Large hub,late_aircraft,7,synthetic
+A0004,MQ3284-2015-12-28,350401,CRP,Non-hub,weather,2,synthetic
+A0005,MQ3297-2015-05-10,135745,ABI,Non-hub,weather,1,synthetic
+A0006,AA2242-2015-06-17,183161,BNA,Small hub,weather,6,synthetic
+A0007,OO6258-2015-11-18,313465,FSD,Non-hub,late_aircraft,2,synthetic
+A0008,DL2696-2015-06-02,162854,BOS,Medium hub,late_aircraft,12,synthetic
+A0009,DL1158-2015-07-07,213348,SLC,Small hub,weather,10,synthetic
+A0010,MQ3399-2015-04-24,123719,LEX,Non-hub,weather,0,synthetic
+A0011,WN1118-2015-09-15,291949,AUS,Small hub,late_aircraft,1,synthetic
+A0012,WN4460-2015-08-15,265241,RDU,Small hub,weather,2,real_derived
+A0013,AA1949-2015-12-10,327658,PHX,Medium hub,late_aircraft,7,synthetic
+A0014,UA1143-2015-01-09,18246,ORD,Large hub,weather,6,real_derived
+A0015,HA33-2015-03-08,81231,OGG,Small hub,weather,1,synthetic
+A0016,AA139-2015-07-17,228096,LAX,Large hub,weather,2,real_derived
+A0017,AS448-2015-07-19,231812,LAX,Large hub,weather,15,real_derived
+A0018,AA40-2015-04-13,112842,ORD,Large hub,late_aircraft,7,synthetic
+A0019,MQ2838-2015-01-05,9942,ORD,Large hub,weather,48,real_derived
+A0020,AA316-2015-12-03,324385,SJU,Small hub,weather,2,synthetic
+A0021,EV4589-2015-07-03,209786,LIT,Small hub,weather,1,real_derived
+A0022,OO5502-2015-04-25,125145,OMA,Small hub,late_aircraft,1,synthetic
+A0023,WN393-2015-06-24,196577,OAK,Small hub,late_aircraft,6,synthetic
+A0024,MQ3677-2015-08-22,274687,SYR,Non-hub,late_aircraft,1,synthetic
+A0025,UA298-2015-06-20,190037,MDT,Non-hub,weather,1,synthetic
+A0026,DL1656-2015-09-07,285480,ATL,Large hub,weather,3,synthetic
+A0027,WN3003-2015-12-25,344782,IND,Small hub,weather,1,synthetic
+A0028,WN2437-2015-07-17,229084,SMF,Small hub,late_aircraft,6,real_derived
+A0029,WN2434-2015-06-28,203208,DEN,Large hub,weather,2,synthetic
+A0030,AA1893-2015-09-10,287875,CLT,Medium hub,weather,18,real_derived
+A0031,DL1777-2015-08-18,268377,ATL,Large hub,weather,19,synthetic
+A0032,WN4415-2015-08-06,254286,BWI,Medium hub,late_aircraft,2,synthetic
+A0033,EV4737-2015-01-07,14107,CLE,Small hub,weather,11,synthetic
+A0034,WN1433-2015-11-16,310706,DEN,Large hub,weather,5,real_derived
+A0035,WN1073-2015-04-24,124443,DAL,Medium hub,late_aircraft,25,real_derived
+A0036,WN1624-2015-05-12,139124,MCI,Small hub,weather,4,real_derived
+A0037,DL1535-2015-04-10,110199,IND,Small hub,weather,5,synthetic
+A0038,DL1895-2015-08-23,275404,PHL,Medium hub,weather,3,synthetic
+A0039,DL1422-2015-05-18,143961,MEM,Small hub,late_aircraft,3,synthetic
+A0040,WN199-2015-06-21,191549,PHX,Medium hub,late_aircraft,10,real_derived
+A0041,AA2192-2015-08-02,248480,DCA,Medium hub,weather,4,real_derived
+A0042,OO5166-2015-04-05,104646,BIS,Non-hub,late_aircraft,0,real_derived
+A0043,B6428-2015-03-18,88559,EWR,Medium hub,late_aircraft,0,synthetic
+A0044,MQ3203-2015-02-04,38400,CLE,Small hub,weather,9,real_derived
+A0045,MQ3174-2015-09-08,286153,SGF,Non-hub,weather,0,synthetic
+A0046,WN2730-2015-07-18,231283,LAX,Large hub,weather,9,real_derived
+A0047,WN3309-2015-03-20,91118,BWI,Medium hub,weather,8,real_derived
+A0048,OO5202-2015-05-28,157036,FSD,Non-hub,late_aircraft,0,synthetic
+A0049,UA578-2015-12-29,353268,BOS,Medium hub,weather,29,synthetic
+A0050,WN2274-2015-09-27,298486,LAX,Large hub,weather,3,real_derived
+A0051,OO4853-2015-08-23,275975,LAX,Large hub,weather,12,real_derived
+A0052,DL2337-2015-06-09,169992,DAY,Non-hub,weather,0,real_derived
+A0053,VX501-2015-01-26,31295,FLL,Medium hub,weather,1,synthetic
+A0054,MQ3501-2015-12-02,323858,MHK,Non-hub,weather,0,real_derived
+A0055,B66-2015-09-04,283582,EWR,Medium hub,weather,25,synthetic
+A0056,WN1390-2015-11-13,309107,MSP,Medium hub,late_aircraft,4,real_derived
+A0057,EV3958-2015-03-23,93033,MEM,Small hub,weather,0,real_derived
+A0058,NK141-2015-09-08,286237,LAX,Large hub,late_aircraft,1,real_derived
+A0059,UA504-2015-07-14,224016,ORD,Large hub,weather,20,synthetic
+A0060,DL1118-2015-06-03,163794,RSW,Small hub,weather,1,synthetic
+A0061,MQ3402-2015-11-17,311305,DFW,Large hub,weather,0,synthetic
+A0062,WN2020-2015-05-23,150627,DEN,Large hub,late_aircraft,14,synthetic
+A0063,WN1681-2015-08-27,279244,PHL,Medium hub,weather,3,synthetic
+A0064,EV2814-2015-12-31,358392,FSM,Non-hub,late_aircraft,0,real_derived
+A0065,WN4650-2015-03-11,84111,JAX,Small hub,late_aircraft,1,synthetic
+A0066,OO6508-2015-02-23,60401,ASE,Non-hub,weather,3,real_derived
+A0067,DL1973-2015-07-15,225589,ROC,Non-hub,late_aircraft,1,synthetic
+A0068,AA730-2015-12-15,331298,CLT,Medium hub,weather,2,synthetic
+A0069,AA2410-2015-11-02,301129,DFW,Large hub,weather,44,real_derived
+A0070,EV5169-2015-08-10,257885,LGA,Medium hub,late_aircraft,3,synthetic
+A0071,OO5537-2015-02-01,34642,FAT,Non-hub,weather,0,synthetic
+A0072,UA578-2015-09-08,286469,BOS,Medium hub,weather,8,real_derived
+A0073,B61443-2015-02-19,53850,PBI,Small hub,late_aircraft,3,synthetic
+A0074,UA470-2015-06-11,173464,JAC,Non-hub,late_aircraft,0,synthetic
+A0075,UA1676-2015-03-23,93977,IAD,Small hub,weather,3,real_derived
+A0076,F91245-2015-04-17,117389,ORD,Large hub,late_aircraft,4,real_derived
+A0077,AA1435-2015-01-19,26463,ORD,Large hub,late_aircraft,4,synthetic
+A0078,WN3151-2015-08-04,251930,LAS,Medium hub,weather,7,synthetic
+A0079,OO6337-2015-07-30,244646,DEN,Large hub,late_aircraft,13,real_derived
+A0080,AA347-2015-01-05,9044,TUS,Small hub,weather,4,synthetic
+A0081,EV4761-2015-01-03,3368,ORD,Large hub,late_aircraft,29,real_derived
+A0082,DL498-2015-03-01,69178,PDX,Small hub,weather,4,synthetic
+A0083,WN3576-2015-05-06,131908,MDW,Medium hub,weather,17,real_derived
+A0084,MQ3063-2015-11-18,313206,OMA,Small hub,late_aircraft,0,real_derived
+A0085,EV5232-2015-12-24,343628,LIT,Small hub,late_aircraft,1,real_derived
+A0086,AA1649-2015-06-14,177112,DFW,Large hub,late_aircraft,20,synthetic
+A0087,US407-2015-05-18,144985,SFO,Medium hub,weather,22,real_derived
+A0088,WN1701-2015-01-29,32477,DEN,Large hub,late_aircraft,10,real_derived
+A0089,WN705-2015-06-24,196657,DEN,Large hub,late_aircraft,17,synthetic
+A0090,UA1143-2015-01-09,18245,TPA,Medium hub,weather,6,real_derived
+A0091,WN420-2015-07-05,211125,PDX,Small hub,late_aircraft,3,synthetic
+A0092,DL2532-2015-01-03,3123,LAX,Large hub,weather,18,synthetic
+A0093,WN242-2015-01-29,32386,ABQ,Small hub,late_aircraft,0,real_derived
+A0094,AA130-2015-07-31,245570,JFK,Medium hub,late_aircraft,7,synthetic
+A0095,EV6030-2015-01-12,21486,SBN,Non-hub,weather,0,synthetic
+A0096,UA1740-2015-09-04,284322,DEN,Large hub,weather,11,real_derived
+A0097,MQ3422-2015-05-09,134605,JLN,Non-hub,weather,0,real_derived
+A0098,MQ3152-2015-01-04,7004,AZO,Non-hub,weather,0,synthetic
+A0099,AA365-2015-06-23,193693,LGA,Medium hub,late_aircraft,11,real_derived
+A0100,DL1413-2015-08-18,268321,LIT,Small hub,weather,1,synthetic
+A0101,NK612-2015-02-26,64970,ORD,Large hub,late_aircraft,5,real_derived
+A0102,OO3497-2015-12-11,328477,SEA,Medium hub,weather,5,synthetic
+A0103,WN1664-2015-05-02,129060,MSY,Small hub,weather,0,synthetic
+A0104,WN1879-2015-06-21,191789,BWI,Medium hub,late_aircraft,3,synthetic
+A0105,DL2318-2015-06-28,202283,MSP,Medium hub,weather,15,synthetic
+A0106,WN893-2015-04-26,126045,OAK,Small hub,weather,3,real_derived
+A0107,EV5429-2015-01-12,21423,MLU,Non-hub,late_aircraft,0,synthetic
+A0108,DL1052-2015-08-23,275158,MKE,Small hub,late_aircraft,2,real_derived
+A0109,US891-2015-01-09,18355,DFW,Large hub,late_aircraft,16,real_derived
+A0110,MQ3066-2015-06-07,167212,CMI,Non-hub,weather,0,synthetic
+A0111,UA1027-2015-06-27,201284,ORD,Large hub,weather,13,synthetic
+A0112,AA1295-2015-07-16,227147,ORD,Large hub,late_aircraft,14,real_derived
+A0113,UA1225-2015-03-26,96842,EWR,Medium hub,weather,5,synthetic
+A0114,AA1593-2015-07-08,214727,AUS,Small hub,weather,3,real_derived
+A0115,MQ3475-2015-08-28,279548,HOU,Medium hub,late_aircraft,0,synthetic
+A0116,MQ3150-2015-06-30,204792,JLN,Non-hub,late_aircraft,0,synthetic
+A0117,EV2678-2015-06-16,181105,DFW,Large hub,late_aircraft,34,real_derived
+A0118,DL1229-2015-05-26,152581,PBI,Small hub,weather,0,synthetic
+A0119,OO5245-2015-01-05,10372,DEN,Large hub,late_aircraft,28,real_derived
+A0120,AA125-2015-04-13,112861,PNS,Non-hub,weather,0,real_derived
+A0121,F9916-2015-07-05,210824,TTN,Non-hub,late_aircraft,0,synthetic
+A0122,F91370-2015-02-13,45927,IAD,Small hub,late_aircraft,3,real_derived
+A0123,WN858-2015-07-24,238874,DAL,Medium hub,late_aircraft,4,real_derived
+A0124,DL1332-2015-11-18,312717,TYS,Non-hub,weather,1,real_derived
+A0125,EV5065-2015-06-24,195860,ATL,Large hub,late_aircraft,61,synthetic
+A0126,WN290-2015-05-11,138140,SMF,Small hub,late_aircraft,2,synthetic
+A0127,OO5245-2015-04-23,122464,DEN,Large hub,late_aircraft,2,synthetic
+A0128,WN4027-2015-07-09,218174,LAX,Large hub,weather,16,real_derived
+A0129,WN4511-2015-01-08,16843,IND,Small hub,late_aircraft,1,synthetic
+A0130,WN929-2015-04-24,124424,OAK,Small hub,late_aircraft,10,real_derived
+A0131,VX211-2015-06-22,193275,SFO,Medium hub,late_aircraft,18,synthetic
+A0132,EV2652-2015-05-15,140848,DFW,Large hub,late_aircraft,6,synthetic
+A0133,AA1254-2015-07-31,245679,SJU,Small hub,late_aircraft,3,real_derived
+A0134,VX872-2015-06-30,205332,DCA,Medium hub,weather,5,real_derived
+A0135,EV5181-2015-04-20,120078,CLE,Small hub,late_aircraft,7,synthetic
+A0136,OO6299-2015-07-28,242163,DEN,Large hub,weather,12,real_derived
+A0137,VX1489-2015-12-30,357086,LAX,Large hub,late_aircraft,26,synthetic
+A0138,DL2064-2015-02-24,61347,SDF,Non-hub,weather,2,real_derived
+A0139,UA1263-2015-06-01,162074,ORD,Large hub,late_aircraft,2,real_derived
+A0140,MQ3482-2015-03-19,89482,SGF,Non-hub,weather,0,real_derived
+A0141,WN697-2015-06-30,205494,MDW,Medium hub,late_aircraft,16,real_derived
+A0142,DL2752-2015-11-24,318747,SFO,Medium hub,late_aircraft,0,synthetic
+A0143,MQ3402-2015-03-27,97997,CMH,Small hub,late_aircraft,3,real_derived
+A0144,OO4980-2015-08-05,252494,ONT,Small hub,late_aircraft,2,synthetic
+A0145,UA1684-2015-08-15,265014,LIH,Non-hub,late_aircraft,0,synthetic
+A0146,NK138-2015-05-26,153165,ACY,Non-hub,late_aircraft,1,real_derived
+A0147,WN4885-2015-02-12,45573,ISP,Non-hub,late_aircraft,0,real_derived
+A0148,UA1554-2015-03-05,78009,ATL,Large hub,weather,32,real_derived
+A0149,US558-2015-05-22,149866,PHL,Medium hub,late_aircraft,1,synthetic
+A0150,EV4166-2015-12-22,338896,EWR,Medium hub,weather,4,real_derived
+A0151,MQ2933-2015-01-13,23035,EVV,Non-hub,weather,0,synthetic
+A0152,WN2425-2015-07-06,212853,MCI,Small hub,weather,9,real_derived
+A0153,F9918-2015-01-18,26046,TTN,Non-hub,late_aircraft,0,real_derived
+A0154,DL773-2015-06-27,200529,PDX,Small hub,weather,2,synthetic
+A0155,UA483-2015-09-17,293546,ROC,Non-hub,weather,2,synthetic
+A0156,WN4558-2015-08-02,249467,TPA,Medium hub,weather,2,synthetic
+A0157,EV4530-2015-09-11,289558,GPT,Non-hub,late_aircraft,0,synthetic
+A0158,UA631-2015-03-13,85608,MSY,Small hub,late_aircraft,3,synthetic
+A0159,DL2413-2015-06-17,183355,PHL,Medium hub,weather,5,synthetic
+A0160,AA267-2015-07-08,214582,HNL,Small hub,late_aircraft,3,synthetic
+A0161,OO5295-2015-01-01,445,CMX,Non-hub,weather,0,real_derived
+A0162,EV4325-2015-08-08,255923,EWR,Medium hub,late_aircraft,2,synthetic
+A0163,AA2222-2015-05-09,134361,AUS,Small hub,weather,0,synthetic
+A0164,MQ3668-2015-04-20,120152,ATL,Large hub,weather,12,synthetic
+A0165,MQ3261-2015-03-21,91594,MOB,Non-hub,late_aircraft,0,real_derived
+A0166,MQ3354-2015-04-26,125761,GSO,Non-hub,weather,0,synthetic
+A0167,AA2274-2015-11-07,305291,DFW,Large hub,weather,1,synthetic
+A0168,OO6262-2015-01-21,28067,PSP,Non-hub,late_aircraft,1,real_derived
+A0169,MQ3180-2015-02-03,37273,BIS,Non-hub,weather,0,real_derived
+A0170,AS662-2015-08-06,253128,DFW,Large hub,late_aircraft,11,real_derived
+A0171,DL994-2015-06-24,195462,TLH,Non-hub,weather,1,synthetic
+A0172,B6486-2015-04-13,113357,ROC,Non-hub,late_aircraft,0,synthetic
+A0173,WN264-2015-08-11,260444,DEN,Large hub,weather,22,real_derived
+A0174,AA2349-2015-01-26,30734,DFW,Large hub,weather,11,synthetic
+A0175,EV6128-2015-07-05,210815,IAH,Medium hub,late_aircraft,4,real_derived
+A0176,EV4451-2015-08-20,271739,ECP,Non-hub,weather,1,real_derived
+A0177,OO5466-2015-01-01,468,LAX,Large hub,weather,1,real_derived
+A0178,EV4654-2015-04-27,126480,IAH,Medium hub,weather,3,real_derived
+A0179,HA164-2015-09-03,282883,HNL,Small hub,late_aircraft,12,real_derived
+A0180,B61042-2015-08-21,273470,JFK,Medium hub,late_aircraft,8,synthetic
+A0181,UA1104-2015-07-25,239501,DEN,Large hub,weather,0,synthetic
+A0182,OO5646-2015-06-29,203848,SBA,Non-hub,late_aircraft,0,real_derived
+A0183,WN642-2015-06-24,196626,DEN,Large hub,late_aircraft,8,synthetic
+A0184,MQ3543-2015-01-02,1668,MHK,Non-hub,late_aircraft,0,real_derived
+A0185,UA354-2015-12-15,331723,ORD,Large hub,weather,5,synthetic
+A0186,DL1658-2015-06-18,185705,ATL,Large hub,late_aircraft,56,real_derived
+A0187,WN1103-2015-07-08,216635,FLL,Medium hub,late_aircraft,6,real_derived
+A0188,OO5519-2015-08-28,279612,DEN,Large hub,late_aircraft,1,synthetic
+A0189,MQ3062-2015-04-13,113666,MGM,Non-hub,weather,0,real_derived
+A0190,AS173-2015-08-14,262990,KTN,Non-hub,weather,0,synthetic
+A0191,AA1638-2015-03-23,92789,MSP,Medium hub,weather,4,real_derived
+A0192,B6347-2015-12-28,349824,LGB,Non-hub,late_aircraft,1,real_derived
+A0193,WN5545-2015-07-26,240644,MDW,Medium hub,late_aircraft,4,synthetic
+A0194,AA340-2015-05-25,151179,DFW,Large hub,weather,14,synthetic
+A0195,DL1574-2015-03-06,78847,DTW,Medium hub,late_aircraft,11,real_derived
+A0196,AA141-2015-08-15,264124,HNL,Small hub,late_aircraft,1,synthetic
+A0197,WN289-2015-12-30,357230,ATL,Large hub,weather,19,real_derived
+A0198,WN1927-2015-05-10,136551,ATL,Large hub,late_aircraft,12,synthetic
+A0199,WN1240-2015-11-18,313905,DEN,Large hub,weather,28,real_derived
+A0200,EV4363-2015-08-25,277413,IAH,Medium hub,late_aircraft,13,synthetic
+A0201,OO5259-2015-06-12,174876,IAH,Medium hub,late_aircraft,11,real_derived
+A0202,DL2416-2015-06-09,170004,TLH,Non-hub,weather,0,synthetic
+A0203,OO5220-2015-11-16,310433,CRP,Non-hub,late_aircraft,0,synthetic
+A0204,WN4211-2015-01-30,33777,ABQ,Small hub,late_aircraft,1,synthetic
+A0205,UA816-2015-01-31,34064,SFO,Medium hub,late_aircraft,5,synthetic
+A0206,WN3592-2015-07-27,241483,LAX,Large hub,weather,1,synthetic
+A0207,OO4653-2015-03-25,95513,ICT,Non-hub,late_aircraft,1,synthetic
+A0208,EV2782-2015-12-28,350070,SHV,Non-hub,late_aircraft,3,real_derived
+A0209,WN2670-2015-12-29,354460,CMH,Small hub,late_aircraft,5,real_derived
+A0210,WN1382-2015-06-27,201554,PNS,Non-hub,late_aircraft,2,real_derived
+A0211,UA1510-2015-03-08,81436,IAH,Medium hub,late_aircraft,9,synthetic
+A0212,OO5315-2015-11-11,307533,JMS,Non-hub,late_aircraft,0,synthetic
+A0213,DL1228-2015-05-26,152580,ATL,Large hub,weather,1,synthetic
+A0214,MQ3470-2015-02-15,47744,CMH,Small hub,weather,0,real_derived
+A0215,AA2097-2015-12-27,346818,PHL,Medium hub,weather,10,synthetic
+A0216,UA1746-2015-03-06,79776,SNA,Small hub,late_aircraft,2,synthetic
+A0217,DL1797-2015-05-26,152695,TPA,Medium hub,weather,10,real_derived
+A0218,B61118-2015-01-05,9375,JFK,Medium hub,weather,14,synthetic
+A0219,AA885-2015-11-21,316130,CLT,Medium hub,weather,1,synthetic
+A0220,WN692-2015-05-08,133837,STL,Small hub,weather,3,real_derived
+A0221,EV4119-2015-12-18,334510,RIC,Small hub,late_aircraft,0,synthetic
+A0222,AA2459-2015-12-19,335515,DFW,Large hub,late_aircraft,0,synthetic
+A0223,EV2529-2015-03-02,71511,FSD,Non-hub,late_aircraft,0,real_derived
+A0224,EV5867-2015-02-18,52959,SYR,Non-hub,weather,0,synthetic
+A0225,MQ3053-2015-03-12,84572,DFW,Large hub,late_aircraft,12,synthetic
+A0226,AA2373-2015-04-09,107775,DFW,Large hub,late_aircraft,1,synthetic
+A0227,UA459-2015-04-09,108695,DEN,Large hub,weather,16,real_derived
+A0228,EV5923-2015-02-08,42193,ISN,Non-hub,weather,0,synthetic
+A0229,OO6277-2015-01-10,18956,DCA,Medium hub,weather,4,synthetic
+A0230,EV5057-2015-06-09,170195,ATL,Large hub,late_aircraft,59,synthetic
+A0231,MQ3287-2015-09-02,281959,GRR,Non-hub,late_aircraft,0,synthetic
+A0232,B61338-2015-06-29,203496,MVY,Non-hub,late_aircraft,0,real_derived
+A0233,AS153-2015-05-16,141786,ANC,Non-hub,late_aircraft,0,real_derived
+A0234,OO4991-2015-04-08,106799,MCI,Small hub,late_aircraft,1,real_derived
+A0235,WN4032-2015-07-16,228025,ONT,Small hub,late_aircraft,5,real_derived
+A0236,EV5988-2015-04-19,119013,DEN,Large hub,weather,5,real_derived
+A0237,DL2062-2015-08-20,271538,BOS,Medium hub,weather,29,synthetic
+A0238,WN672-2015-06-24,196643,DEN,Large hub,weather,20,real_derived
+A0239,B61479-2015-02-03,36914,FLL,Medium hub,late_aircraft,4,real_derived
+A0240,WN874-2015-01-03,4771,PBI,Small hub,late_aircraft,1,real_derived
+A0241,MQ3239-2015-05-21,148553,ABI,Non-hub,weather,0,synthetic
+A0242,UA222-2015-02-26,65303,BDL,Small hub,weather,3,synthetic
+A0243,OO5492-2015-11-22,317847,COS,Non-hub,late_aircraft,0,synthetic
+A0244,WN757-2015-06-02,163547,PHX,Medium hub,late_aircraft,6,synthetic
+A0245,UA1764-2015-07-09,217753,IAH,Medium hub,late_aircraft,3,synthetic
+A0246,AA397-2015-08-27,278691,SJU,Small hub,weather,1,real_derived
+A0247,AA43-2015-11-02,300857,DTW,Medium hub,weather,6,real_derived
+A0248,EV2522-2015-04-27,126414,BTR,Non-hub,late_aircraft,1,synthetic
+A0249,AA2117-2015-08-19,269517,LGA,Medium hub,late_aircraft,13,synthetic
+A0250,WN438-2015-06-10,172140,DAL,Medium hub,late_aircraft,8,synthetic
+A0251,B6749-2015-06-18,185470,TPA,Medium hub,late_aircraft,19,synthetic
+A0252,DL1828-2015-04-25,124834,ATL,Large hub,late_aircraft,14,synthetic
+A0253,WN1869-2015-08-13,262650,SEA,Medium hub,weather,7,real_derived
+A0254,DL467-2015-02-17,50798,SLC,Small hub,weather,5,synthetic
+A0255,DL171-2015-08-11,259406,MSP,Medium hub,late_aircraft,12,synthetic
+A0256,AA2256-2015-03-25,95186,OKC,Small hub,weather,1,synthetic
+A0257,DL1756-2015-07-22,235791,MLB,Non-hub,weather,0,synthetic
+A0258,MQ3070-2015-02-13,45957,CMH,Small hub,weather,2,synthetic
+A0259,OO6314-2015-02-15,47932,DSM,Non-hub,weather,0,synthetic
+A0260,MQ3143-2015-05-10,135712,DFW,Large hub,weather,2,synthetic
+A0261,WN17-2015-04-22,122028,CRP,Non-hub,weather,0,real_derived
+A0262,AA48-2015-11-25,319186,DFW,Large hub,late_aircraft,0,synthetic
+A0263,DL1621-2015-02-02,35477,TPA,Medium hub,weather,9,real_derived
+A0264,DL2582-2015-04-10,110538,ABE,Non-hub,weather,1,synthetic
+A0265,WN1258-2015-07-18,230958,AUS,Small hub,weather,2,synthetic
+A0266,B6667-2015-12-30,355100,PSE,Non-hub,late_aircraft,0,synthetic
+A0267,WN147-2015-02-16,49961,BDL,Small hub,weather,4,synthetic
+A0268,AA326-2015-12-27,346503,STL,Small hub,weather,1,real_derived
+A0269,EV2847-2015-12-30,355940,TYS,Non-hub,late_aircraft,3,synthetic
+A0270,DL2479-2015-06-09,170018,MDT,Non-hub,weather,0,synthetic
+A0271,WN576-2015-07-07,214220,DCA,Medium hub,weather,3,real_derived
+A0272,WN263-2015-12-27,348512,SNA,Small hub,late_aircraft,7,synthetic
+A0273,OO4995-2015-03-23,93536,BOS,Medium hub,weather,1,real_derived
+A0274,WN2625-2015-11-18,314034,LAS,Medium hub,late_aircraft,14,synthetic
+A0275,WN627-2015-02-26,65915,MDW,Medium hub,late_aircraft,3,synthetic
+A0276,AA2576-2015-12-28,349790,DEN,Large hub,late_aircraft,19,synthetic
+A0277,EV2672-2015-06-13,175989,VPS,Non-hub,late_aircraft,0,real_derived
+A0278,OO4722-2015-08-02,248842,LAX,Large hub,late_aircraft,6,real_derived
+A0279,F9914-2015-03-09,82132,TTN,Non-hub,late_aircraft,0,synthetic
+A0280,DL241-2015-12-30,355202,SFO,Medium hub,weather,12,synthetic
+A0281,MQ3399-2015-04-27,126603,LEX,Non-hub,late_aircraft,0,synthetic
+A0282,MQ3090-2015-02-05,39892,LCH,Non-hub,weather,0,synthetic
+A0283,UA1067-2015-01-05,10641,DEN,Large hub,late_aircraft,25,real_derived
+A0284,DL1072-2015-01-12,20931,PIT,Small hub,weather,0,synthetic
+A0285,OO4472-2015-07-06,212069,DAY,Non-hub,late_aircraft,1,synthetic
+A0286,B61141-2015-07-02,207961,PBI,Small hub,late_aircraft,3,real_derived
+A0287,UA1479-2015-02-26,65463,IAD,Small hub,late_aircraft,7,synthetic
+A0288,OO5244-2015-01-15,24614,JAC,Non-hub,late_aircraft,0,real_derived
+A0289,EV6122-2015-01-13,23001,LEX,Non-hub,late_aircraft,0,real_derived
+A0290,WN2055-2015-05-02,129072,SMF,Small hub,late_aircraft,1,real_derived
+A0291,MQ3049-2015-03-18,88802,DFW,Large hub,late_aircraft,5,real_derived
+A0292,OO6200-2015-12-11,328506,DEN,Large hub,weather,2,real_derived
+A0293,UA771-2015-12-28,350868,EWR,Medium hub,weather,7,real_derived
+A0294,AA2315-2015-09-04,283529,MIA,Medium hub,weather,10,real_derived
+A0295,UA1123-2015-04-23,122562,LAX,Large hub,late_aircraft,2,real_derived
+A0296,EV4869-2015-02-03,37089,VPS,Non-hub,late_aircraft,0,real_derived
+A0297,US695-2015-01-03,4506,LAX,Large hub,late_aircraft,22,synthetic
+A0298,WN4121-2015-02-26,66264,DEN,Large hub,weather,21,real_derived
+A0299,WN385-2015-07-08,216488,SEA,Medium hub,late_aircraft,9,synthetic
+A0300,VX885-2015-07-08,216384,LAX,Large hub,weather,18,real_derived
+A0301,WN1513-2015-08-20,272961,MKE,Small hub,weather,7,real_derived
+A0302,EV5246-2015-03-20,90222,CHO,Non-hub,late_aircraft,0,real_derived
+A0303,OO5530-2015-04-29,127694,DEN,Large hub,late_aircraft,2,synthetic
+A0304,MQ3080-2015-09-11,289658,PIT,Small hub,late_aircraft,1,synthetic
+A0305,UA815-2015-07-10,218832,LAX,Large hub,weather,4,synthetic
+A0306,EV5102-2015-08-06,253535,ATL,Large hub,late_aircraft,20,real_derived
+A0307,MQ3344-2015-04-01,101524,DFW,Large hub,weather,25,real_derived
+A0308,MQ3201-2015-05-13,139524,DFW,Large hub,weather,17,synthetic
+A0309,AA919-2015-07-03,209360,TPA,Medium hub,weather,3,real_derived
+A0310,WN46-2015-06-26,199684,DAL,Medium hub,weather,15,real_derived
+A0311,US564-2015-06-21,191450,PHX,Medium hub,late_aircraft,3,synthetic
+A0312,OO4446-2015-04-21,121357,SLC,Small hub,weather,3,synthetic
+A0313,UA211-2015-02-02,36206,IAD,Small hub,weather,1,synthetic
+A0314,WN51-2015-08-11,260394,HOU,Medium hub,weather,14,synthetic
+A0315,WN3582-2015-06-23,195144,MDW,Medium hub,late_aircraft,15,synthetic
+A0316,OO5193-2015-01-20,27197,DFW,Large hub,late_aircraft,6,synthetic
+A0317,OO5672-2015-12-19,335915,EUG,Non-hub,late_aircraft,0,real_derived
+A0318,B6213-2015-03-05,76922,LGB,Non-hub,weather,1,real_derived
+A0319,WN2977-2015-11-19,315035,BWI,Medium hub,late_aircraft,8,real_derived
+A0320,MQ3114-2015-02-03,37262,ORD,Large hub,weather,14,synthetic
+A0321,WN2511-2015-06-11,174013,LAS,Medium hub,late_aircraft,20,real_derived
+A0322,DL1630-2015-08-10,257644,SAT,Small hub,weather,4,synthetic
+A0323,OO5601-2015-01-05,10464,SFO,Medium hub,late_aircraft,20,synthetic
+A0324,AA2333-2015-11-15,309421,ORF,Non-hub,weather,0,synthetic
+A0325,DL1846-2015-12-24,343300,HDN,Non-hub,weather,0,real_derived
+A0326,US1889-2015-05-09,134849,BDL,Small hub,late_aircraft,2,synthetic
+A0327,AA1178-2015-05-10,135201,ATL,Large hub,weather,2,synthetic
+A0328,F9930-2015-09-12,290179,TTN,Non-hub,late_aircraft,0,real_derived
+A0329,WN4835-2015-03-02,73197,SFO,Medium hub,weather,7,real_derived
+A0330,WN1729-2015-08-20,273008,IAD,Small hub,late_aircraft,5,synthetic
+A0331,UA1582-2015-01-09,18316,MSY,Small hub,weather,5,synthetic
+A0332,US2167-2015-06-18,187231,DCA,Medium hub,late_aircraft,22,real_derived
+A0333,AS406-2015-01-11,19327,SJC,Small hub,weather,2,real_derived
+A0334,DL1600-2015-05-26,152655,SHV,Non-hub,weather,2,real_derived
+A0335,DL1266-2015-02-02,35425,ATL,Large hub,weather,3,synthetic
+A0336,DL486-2015-02-02,35370,PDX,Small hub,weather,4,synthetic
+A0337,EV5474-2015-03-06,79233,CSG,Non-hub,late_aircraft,1,synthetic
+A0338,NK770-2015-07-14,223741,DTW,Medium hub,late_aircraft,13,real_derived
+A0339,WN1118-2015-08-21,274322,AUS,Small hub,late_aircraft,6,synthetic
+A0340,UA775-2015-11-21,316765,DEN,Large hub,weather,4,synthetic
+A0341,UA1078-2015-12-29,353360,EWR,Medium hub,weather,4,synthetic
+A0342,OO5321-2015-06-15,179440,DLH,Non-hub,weather,0,synthetic
+A0343,WN246-2015-01-06,13037,LAS,Medium hub,late_aircraft,15,real_derived
+A0344,MQ3046-2015-01-05,10040,DBQ,Non-hub,weather,0,real_derived
+A0345,US1940-2015-04-27,126843,CLT,Medium hub,weather,4,synthetic
+A0346,EV5035-2015-06-03,163940,LGA,Medium hub,late_aircraft,3,synthetic
+A0347,WN3241-2015-07-03,210257,RIC,Small hub,weather,1,real_derived
+A0348,OO6262-2015-01-05,10501,PSP,Non-hub,late_aircraft,0,real_derived
+A0349,WN48-2015-07-15,226405,HOU,Medium hub,late_aircraft,8,synthetic
+A0350,DL2529-2015-06-18,185854,CLE,Small hub,weather,9,synthetic
+A0351,OO6433-2015-06-15,179536,LAX,Large hub,late_aircraft,18,synthetic
+A0352,WN3652-2015-07-30,245434,PWM,Non-hub,weather,0,real_derived
+A0353,MQ3207-2015-02-24,61900,DFW,Large hub,late_aircraft,16,real_derived
+A0354,OO5554-2015-01-03,4144,DEN,Large hub,late_aircraft,9,real_derived
+A0355,WN2125-2015-12-17,334000,PDX,Small hub,late_aircraft,2,real_derived
+A0356,DL2402-2015-12-24,343444,CHO,Non-hub,weather,0,synthetic
+A0357,B61915-2015-07-27,240821,BUF,Small hub,weather,1,real_derived
+A0358,DL86-2015-12-28,349856,DTW,Medium hub,late_aircraft,10,real_derived
+A0359,OO6374-2015-01-03,4222,ASE,Non-hub,late_aircraft,6,real_derived
+A0360,MQ3472-2015-02-20,55902,MDT,Non-hub,weather,0,synthetic
+A0361,WN268-2015-07-19,232613,MCI,Small hub,late_aircraft,10,synthetic
+A0362,WN586-2015-02-26,65899,MCI,Small hub,late_aircraft,6,synthetic
+A0363,WN3385-2015-02-19,55054,BDL,Small hub,late_aircraft,2,synthetic
+A0364,WN4606-2015-08-01,248322,BDL,Small hub,weather,3,synthetic
+A0365,WN2799-2015-08-20,273157,EWR,Medium hub,weather,35,synthetic
+A0366,WN431-2015-12-15,331944,DEN,Large hub,weather,6,real_derived
+A0367,AA1519-2015-01-20,26976,DFW,Large hub,late_aircraft,8,synthetic
+A0368,WN1533-2015-12-02,324243,PVD,Non-hub,late_aircraft,0,real_derived
+A0369,WN229-2015-12-27,348484,DAY,Non-hub,late_aircraft,0,synthetic
+A0370,OO7359-2015-12-29,353137,DTW,Medium hub,late_aircraft,21,synthetic
+A0371,B61583-2015-11-12,307979,RDU,Small hub,late_aircraft,3,synthetic
+A0372,UA1979-2015-06-18,187069,CLE,Small hub,late_aircraft,10,synthetic
+A0373,MQ3633-2015-01-11,19754,GRK,Non-hub,late_aircraft,2,real_derived
+A0374,DL2473-2015-07-21,234568,BUF,Small hub,weather,5,synthetic
+A0375,AA294-2015-05-09,134174,ORF,Non-hub,weather,1,real_derived
+A0376,UA480-2015-06-03,164176,PIT,Small hub,late_aircraft,0,synthetic
+A0377,DL1412-2015-12-30,355424,MCO,Medium hub,weather,16,synthetic
+A0378,WN4919-2015-05-04,130643,GEG,Non-hub,late_aircraft,0,real_derived
+A0379,OO5500-2015-06-01,161873,ASE,Non-hub,weather,0,real_derived
+A0380,WN2547-2015-04-18,118675,ISP,Non-hub,late_aircraft,1,synthetic
+A0381,UA1412-2015-04-20,120423,ORD,Large hub,weather,17,synthetic
+A0382,UA1776-2015-07-06,212418,TPA,Medium hub,weather,4,real_derived
+A0383,EV4333-2015-06-19,188206,PIA,Non-hub,late_aircraft,0,synthetic
+A0384,MQ3422-2015-12-29,352782,ORD,Large hub,late_aircraft,23,real_derived
+A0385,B6803-2015-06-22,192186,SJU,Small hub,late_aircraft,1,synthetic
+A0386,UA1849-2015-12-19,336039,LAX,Large hub,late_aircraft,5,synthetic
+A0387,NK893-2015-12-18,334729,DFW,Large hub,late_aircraft,3,real_derived
+A0388,WN8-2015-12-24,343932,SAT,Small hub,weather,3,synthetic
+A0389,DL826-2015-06-10,171343,ATL,Large hub,weather,13,synthetic
+A0390,DL1347-2015-08-19,269696,SNA,Small hub,weather,4,synthetic
+A0391,AA2199-2015-05-30,158820,DFW,Large hub,weather,15,synthetic
+A0392,AA1358-2015-12-29,351724,LAX,Large hub,late_aircraft,19,real_derived
+A0393,UA670-2015-11-18,313633,BOS,Medium hub,weather,10,synthetic
+A0394,AA35-2015-01-12,20642,DFW,Large hub,weather,33,synthetic
+A0395,DL1666-2015-02-18,52680,ATL,Large hub,weather,18,synthetic
+A0396,WN2242-2015-07-19,232879,PHX,Medium hub,late_aircraft,10,real_derived
+A0397,EV4904-2015-06-08,168414,FAR,Non-hub,late_aircraft,1,real_derived
+A0398,WN929-2015-09-18,294584,MCO,Medium hub,late_aircraft,2,synthetic
+A0399,DL2265-2015-07-03,209721,SFO,Medium hub,weather,3,real_derived
+A0400,DL1763-2015-01-05,9454,MSP,Medium hub,weather,11,real_derived
+A0401,DL1519-2015-06-18,185685,SRQ,Non-hub,weather,0,synthetic
+A0402,DL2784-2015-06-02,162855,GNV,Non-hub,weather,0,synthetic
+A0403,NK824-2015-06-22,192779,BWI,Medium hub,late_aircraft,2,synthetic
+A0404,MQ3169-2015-05-13,139516,XNA,Small hub,weather,1,synthetic
+A0405,MQ3527-2015-11-02,301658,DFW,Large hub,late_aircraft,15,real_derived
+A0406,VX879-2015-12-27,348346,LAX,Large hub,weather,9,synthetic
+A0407,UA215-2015-09-11,289775,ORD,Large hub,late_aircraft,8,synthetic
+A0408,AA2304-2015-05-13,139334,IND,Small hub,late_aircraft,1,synthetic
+A0409,AA1037-2015-01-10,18597,SJC,Small hub,weather,1,synthetic
+A0410,B62580-2015-11-06,304571,BOS,Medium hub,late_aircraft,9,synthetic
+A0411,AA1213-2015-04-13,113015,DFW,Large hub,late_aircraft,62,real_derived
+A0412,MQ3103-2015-11-06,304780,LFT,Non-hub,weather,0,synthetic
+A0413,NK680-2015-12-22,339075,FLL,Medium hub,late_aircraft,10,real_derived
+A0414,WN403-2015-06-25,198054,ALB,Non-hub,late_aircraft,0,synthetic
+A0415,WN4600-2015-07-18,231606,ABQ,Small hub,weather,6,real_derived
+A0416,WN1852-2015-03-05,78347,MDW,Medium hub,weather,6,real_derived
+A0417,OO5264-2015-05-04,130154,MEM,Small hub,late_aircraft,1,synthetic
+A0418,WN903-2015-05-18,145423,PBI,Small hub,weather,6,synthetic
+A0419,DL1701-2015-02-08,42114,ATL,Large hub,weather,0,synthetic
+A0420,WN1939-2015-12-10,328173,LAS,Medium hub,late_aircraft,11,real_derived
+A0421,OO4449-2015-02-17,51707,ATL,Large hub,late_aircraft,31,synthetic
+A0422,WN1126-2015-06-21,191745,IND,Small hub,weather,1,real_derived
+A0423,WN988-2015-04-12,112778,DEN,Large hub,late_aircraft,1,synthetic
+A0424,DL1515-2015-01-08,15672,ALB,Non-hub,weather,2,synthetic
+A0425,WN2294-2015-12-30,357917,LAX,Large hub,late_aircraft,20,synthetic
+A0426,B6702-2015-08-01,247340,BUF,Small hub,late_aircraft,2,synthetic
+A0427,UA1723-2015-02-08,42489,KOA,Non-hub,weather,0,real_derived
+A0428,AA2409-2015-04-27,126297,BNA,Small hub,weather,2,real_derived
+A0429,OO6351-2015-04-16,116408,RDM,Non-hub,weather,0,synthetic
+A0430,B6328-2015-08-14,263076,EWR,Medium hub,weather,9,real_derived
+A0431,WN187-2015-02-26,65714,DSM,Non-hub,late_aircraft,3,synthetic
+A0432,MQ3218-2015-05-22,149636,IND,Small hub,late_aircraft,1,real_derived
+A0433,UA685-2015-06-18,186838,BNA,Small hub,late_aircraft,16,synthetic
+A0434,UA1558-2015-06-16,182125,IAD,Small hub,weather,2,synthetic
+A0435,OO2997-2015-12-18,334748,GJT,Non-hub,late_aircraft,1,real_derived
+A0436,WN1235-2015-06-20,190291,BHM,Small hub,weather,1,synthetic
+A0437,US2034-2015-04-09,109028,CLT,Medium hub,weather,17,synthetic
+A0438,VX89-2015-11-28,320637,LAX,Large hub,weather,2,synthetic
+A0439,UA1541-2015-11-17,311732,BNA,Small hub,late_aircraft,12,synthetic
+A0440,UA1042-2015-03-05,77927,DEN,Large hub,late_aircraft,10,synthetic
+A0441,OO4540-2015-03-31,100959,LAX,Large hub,weather,6,real_derived
+A0442,UA560-2015-11-24,318899,SFO,Medium hub,late_aircraft,17,synthetic
+A0443,UA535-2015-06-23,194419,LAX,Large hub,weather,14,synthetic
+A0444,WN3762-2015-07-23,237983,LAS,Medium hub,late_aircraft,16,real_derived
+A0445,B6261-2015-01-03,2895,SJU,Small hub,weather,7,real_derived
+A0446,WN10-2015-08-20,272574,DAL,Medium hub,weather,1,real_derived
+A0447,MQ3091-2015-06-16,181405,BPT,Non-hub,weather,0,synthetic
+A0448,DL419-2015-01-06,11668,SEA,Medium hub,weather,10,synthetic
+A0449,MQ3039-2015-12-28,350345,DRO,Non-hub,weather,0,synthetic
+A0450,EV5019-2015-12-22,338949,RDU,Small hub,late_aircraft,3,synthetic
+A0451,AA2216-2015-03-23,92807,LAX,Large hub,weather,7,real_derived
+A0452,OO5431-2015-01-06,12509,MKE,Small hub,weather,3,real_derived
+A0453,DL1726-2015-12-24,343258,FLL,Medium hub,weather,9,real_derived
+A0454,WN1115-2015-04-11,112215,BUF,Small hub,weather,0,synthetic
+A0455,WN2437-2015-11-21,316951,SAT,Small hub,late_aircraft,3,real_derived
+A0456,DL434-2015-02-02,35357,SFO,Medium hub,weather,13,synthetic
+A0457,UA1160-2015-06-17,184582,JAC,Non-hub,late_aircraft,1,synthetic
+A0458,AA2401-2015-05-10,135363,LAX,Large hub,weather,2,real_derived
+A0459,EV5440-2015-06-23,194128,ATL,Large hub,late_aircraft,16,synthetic
+A0460,OO6270-2015-01-30,33219,RNO,Small hub,late_aircraft,0,real_derived
+A0461,WN691-2015-08-03,250586,RDU,Small hub,weather,0,real_derived
+A0462,AA1525-2015-05-09,134318,DFW,Large hub,weather,40,synthetic
+A0463,AA1440-2015-11-15,309384,AUS,Small hub,weather,3,synthetic
+A0464,OO6507-2015-11-04,302870,XNA,Small hub,late_aircraft,0,synthetic
+A0465,B62275-2015-02-14,46659,SJU,Small hub,late_aircraft,1,synthetic
+A0466,DL2676-2015-02-16,48903,BOS,Medium hub,late_aircraft,16,real_derived
+A0467,EV3814-2015-07-09,217242,GSP,Non-hub,weather,0,real_derived
+A0468,DL2095-2015-07-02,208101,ORF,Non-hub,late_aircraft,1,synthetic
+A0469,MQ2867-2015-01-03,3711,LRD,Non-hub,late_aircraft,0,real_derived
+A0470,MQ3191-2015-03-09,82193,DFW,Large hub,weather,13,real_derived
+A0471,F91255-2015-01-29,32126,MIA,Medium hub,weather,3,real_derived
+A0472,WN1890-2015-01-06,13435,MCI,Small hub,late_aircraft,5,synthetic
+A0473,OO6210-2015-01-01,510,DEN,Large hub,late_aircraft,7,real_derived
+A0474,DL1124-2015-07-01,206270,SLC,Small hub,weather,8,real_derived
+A0475,AA1636-2015-11-02,301040,ORD,Large hub,weather,9,synthetic
+A0476,EV2687-2015-08-11,259601,DFW,Large hub,late_aircraft,6,synthetic
+A0477,NK683-2015-02-27,66961,RSW,Small hub,late_aircraft,1,synthetic
+A0478,MQ3106-2015-12-14,330671,DFW,Large hub,weather,5,synthetic
+A0479,AA673-2015-07-15,225066,CLT,Medium hub,late_aircraft,13,synthetic
+A0480,AA1095-2015-03-13,85101,DFW,Large hub,late_aircraft,9,synthetic
+A0481,EV5937-2015-06-23,194137,SAF,Non-hub,weather,0,synthetic
+A0482,OO5576-2015-01-12,22071,PIA,Non-hub,weather,0,real_derived
+A0483,MQ2979-2015-03-02,71811,GRK,Non-hub,weather,0,synthetic
+A0484,MQ3625-2015-01-11,19753,CID,Non-hub,weather,0,synthetic
+A0485,B6704-2015-01-14,23759,JFK,Medium hub,late_aircraft,2,synthetic
+A0486,EV4228-2015-06-14,177394,GRK,Non-hub,late_aircraft,0,real_derived
+A0487,WN2443-2015-12-28,351463,PVD,Non-hub,weather,2,real_derived
+A0488,EV4981-2015-06-02,162927,CLE,Small hub,late_aircraft,4,synthetic
+A0489,F91456-2015-07-16,227437,ATL,Large hub,late_aircraft,1,synthetic
+A0490,VX312-2015-12-26,345962,MCO,Medium hub,weather,12,synthetic
+A0491,WN1219-2015-06-13,176655,MDW,Medium hub,weather,19,real_derived
+A0492,OO4627-2015-03-03,74507,DTW,Medium hub,late_aircraft,28,real_derived
+A0493,OO2867-2015-07-23,237258,LAX,Large hub,late_aircraft,6,real_derived
+A0494,MQ3126-2015-09-11,289660,AEX,Non-hub,weather,1,synthetic
+A0495,MQ3651-2015-02-16,49410,VPS,Non-hub,late_aircraft,0,synthetic
+A0496,WN4119-2015-05-18,145632,TPA,Medium hub,weather,12,real_derived
+A0497,DL1491-2015-05-18,143978,TPA,Medium hub,late_aircraft,11,synthetic
+A0498,MQ3289-2015-01-08,16063,SUX,Non-hub,weather,0,synthetic
+A0499,AA1764-2015-12-02,323369,MCI,Small hub,late_aircraft,1,real_derived

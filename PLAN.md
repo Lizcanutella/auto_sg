@@ -20,8 +20,9 @@ When weather cuts an airport's arrival rate, ATC, the airline and the ground han
 | Explicit constraint checking | Deterministic rule modules with rule IDs that cite their sources |
 | Traceable consensus log | Append-only JSONL with every message, check, score and decision, replayable in the UI |
 | Deterministic non-AI fallback | Ration-by-Schedule + first-fit gate, restricted to options nobody vetoed, or escalate to the human |
-| Under 3 turns | Hard state machine: Turn 1 evaluate, Turn 2 counter, Turn 3 commit, otherwise fallback |
-| Use a DOT row with `WEATHER_DELAY > 15` or `LATE_AIRCRAFT_DELAY > 20` | Every benchmark scenario is built around such a row (the **focal flight**) |
+| Under 3 turns (one turn = each of the 3 agents sends one structured message) | Hard state machine: Turn 1 evaluate, Turn 2 counter, Turn 3 commit, otherwise fallback, with the reason logged |
+| Use a row of `flights.csv` (all rows qualify) | Every benchmark scenario is built around such a row (the **focal flight**) |
+| Use the limits in `challenge2_operational_constraints.xlsx`; state any change | Builder reads the workbook; every value we change or add is listed on a "Changed / added limits" slide |
 
 What we add on top, which is what most teams won't have:
 **baselines, a best-possible reference, hundreds of scenarios, adversarial cases, and a measured answer to "do the LLMs actually help?"**
@@ -40,11 +41,19 @@ What we add on top, which is what most teams won't have:
 ## 3. System design
 
 ### 3.1 Scenario = one disruption episode
+<<<<<<< HEAD
+Built from a **focal flight** (a row of `flights.csv`) plus context. `flights.csv` holds only delayed flights, not the full schedule, so context is part real, part synthetic:
+- **Competing arrivals:** delayed flights in the file arriving at the same destination in the window are **real**. The rest of the arrival stream, up to the airport's arrival rate, is **synthetic filler** (labelled). On big storm days (e.g. 58 delayed ATL arrivals in one hour) most of the stream is real.
+- **Same-aircraft chain:** when the focal tail's next same-day leg is in the file (42% of rows), its schedule and recorded `LATE_AIRCRAFT_DELAY` are **real**. That is the knock-on delay we try to reduce. Otherwise the next leg is **synthetic** (scheduled after the airport's minimum turnaround plus seeded slack).
+- **Gates:** per-airport gate count and `spare_gates_at_any_time` from the workbook (**synthetic, organiser-provided**). Each scenario gets the planned gate plus the spare gates, with seeded bookings.
+- **Capacity:** arrival rate = half of the workbook's `max_runway_ops_per_hour` (**our assumption**: the other half is departures). For weather rows it is cut by a seeded factor scaled by `WEATHER_DELAY` (**synthetic, labelled**). Late-aircraft rows keep normal capacity: there the disruption is the late inbound aircraft itself.
+=======
 Built from a **focal flight** (a qualifying DOT row) plus its real context:
 - **Competing arrivals:** all real flights scheduled to arrive at the same destination within ±60–90 min. They compete for the reduced runway slots.
 - **Same-aircraft chain:** the focal flight's `TAIL_NUMBER` on the same day gives its **next leg**, which gives turnaround slack and knock-on delay. This is real data.
 - **Gate occupancy:** times on the ground per tail at that airport (arrival to next departure) are **real** demand. Gate *count*, *spare gates at any time* and *minimum turnaround* per airport come from the **challenge workbook** (§3.7). Assigning tails to individual gates (and gate size) is still ours.
 - **Capacity drop:** the base capacity is the workbook's `max_runway_ops_per_hour` and `active_runways` per airport (arrivals + departures combined, so an arrival share must be assumed and stated). For weather scenarios it is reduced by a parameter (e.g. –25%, –40%, –60%), which is still a **synthetic multiplier, labelled**.
+>>>>>>> 233fdc4dab4e8e0623b4f7925e48a421132030db
 - **Decision point:** before departure from the origin, so ground delay at the origin is still an option. This mirrors how Ground Delay Programs work: taking delay on the ground is much cheaper than airborne holding. A second variant at T-45 min, airborne, leaves only holding, rerouting or diverting.
 
 ### 3.2 Options (each one fully computed by the simulator)
@@ -54,11 +63,21 @@ The option generator is **deterministic** and lists a small set (~20–150 optio
 
 ### 3.3 Private data and checks per agent
 
+Limits come from the organiser workbook unless marked otherwise.
+
 | Agent | Private data (others can't see it) | Hard constraints (veto, rule ID + source) | Private cost |
 |---|---|---|---|
+<<<<<<< HEAD
+| **ATC** | Slot sequence, arrival rate, wake category of neighbours, taxiway closures | Slot capacity per hour; wake separation (workbook `wake_separation`, from FAA JO 7110.65); gate unreachable when its taxiway is closed; holding-stack limit (ours) | Sector holding minutes, throughput loss |
+| **Pilot / Airline** | Fuel on board, burn rate, connecting passengers, crew report time | Landing fuel ≥ 30 min holding reserve (workbook; alternate fuel optional, off by default); crew duty ≤ 13 h from report (workbook, simplified Part 117); no route through the weather cell | Fuel kg/CO₂, passenger-delay minutes, missed connections |
+| **Ground** | Gate bookings, planned gate, ramp crew shift | Gate free and size-compatible; **gate change notified ≥ 20 min before arrival** (workbook); overtime cap (ours) | Overtime minutes (1.5× after the 8 h shift, workbook), turnaround delay, gate changes |
+
+Fuel on board is derived from the workbook: trip fuel + 5% contingency + 45 min spare holding + 30 min final reserve. We read "45 min spare" as fuel on top of the final reserve, and we state that reading in the demo.
+=======
 | **ATC** | Slot sequence, AAR, wake category of neighbours, taxiway closures | Runway ops per hour ≤ workbook `max_runway_ops_per_hour` (weather-reduced); wake separation from the **workbook table** (simplified FAA JO 7110.65: Super/Heavy/Large/Small, NM on approach, seconds for same-runway departures); gate unreachable when its taxiway is closed | Sector holding minutes, throughput loss |
 | **Pilot / Airline** | Fuel on board, burn rate, alternate, connecting passengers, crew duty limit | Never plan below the **workbook final reserve: 30 min of holding fuel** (+ alternate); fuel on board = trip + **5% contingency** + final reserve + **45 min spare holding** (workbook default), burn **2,400 kg/h narrowbody / 6,500 kg/h widebody**; crew duty ≤ **13 h from report** (workbook, simplified Part 117); no route through the weather cell | Fuel kg/CO₂, passenger-delay minutes, missed connections |
 | **Ground** | Gate schedule, gate size, ramp crew shift ends | Gate free and size-compatible; minimum turnaround (**workbook: 45 min large hub, 35 min others**); **gate change only if decided ≥ 20 min before arrival** (workbook); crew available | Overtime minutes (**workbook: 8 h shift, overtime costs 1.5×**), turnaround delay, tow moves |
+>>>>>>> 233fdc4dab4e8e0623b4f7925e48a421132030db
 
 **Rule:** the LLM never decides legality. Every proposal passes through the sender's own checker before it is sent and through the mediator's schema validator on receipt. An agent **cannot ACCEPT an option its own checker vetoed**; the code enforces this regardless of what the LLM says.
 
@@ -69,7 +88,8 @@ Turn 1  Mediator ─► all: disruption + option IDs + public data
 Turn 2  Mediator: drop vetoed options → rank remaining by aggregation rule → propose top-k
         each agent: ACCEPT one | COUNTER (concede, reveal more, or request a variant) | REJECT
 Turn 3  Mediator: final joint proposal → unanimous ACCEPT ⇒ CONSENSUS
-        otherwise ⇒ FALLBACK: RBS slot + first-fit gate among non-vetoed options
+        otherwise ⇒ FALLBACK: RBS slot + first-fit gate among non-vetoed options (log why consensus failed)
+        (organiser definition: one turn = each of the 3 agents sends one structured message)
         no non-vetoed option ⇒ ESCALATE to duty manager ("no safe plan found", with reasons)
 Human   Duty manager sees plan + rule trace + alternatives → Approve / Override (logged)
 ```
@@ -114,8 +134,11 @@ The organisers' workbook says: *"Use the limits in this workbook. Any limit you 
 ## 4. The benchmark
 
 ### 4.1 Systems compared (same scenarios, same simulator, same cost model)
-1. **FCFS / RBS baseline:** a stand-in for today's process
+0. **Siloed status quo** (`baselines/siloed.py`): today's process. Each organisation decides its own part with its own data, in sequence (ATC slot → airline departs when ready and holds in the air → ground keeps planned gate), and they only "phone" when a hard limit breaks. Always safe, never optimised.
+1. **FCFS / RBS** (`baselines/fcfs_rbs.py`): coordinated simple rules. Everyone's data is shared, but the plan still follows the dispatch order (RBS slot, ground delay first, planned gate)
 2. **Best possible:** a central solver with all private data (enumeration, or OR-Tools CP-SAT for multi-flight)
+
+**First measured result (500 scenarios, `python -m bench.baselines_report`):** the price of silos (siloed − best) is non-zero in 81% of weather scenarios (mean $931) and 32% of late-aircraft scenarios (mean $74). Sharing data with simple rules (FCFS) recovers 45% and 79% of it respectively; the rest needs actual trade-offs, which is the negotiators' job. With all data shared, the best plan is often obvious: FCFS already matches it in 83% / 93% of cases.
 3. **Scripted negotiators:** the same protocol with fixed, honest strategies (no LLM)
 4. **LLM negotiators:** the same protocol, with LLM strategy inside the hard guards
 5. *(context only)* **Historical outcome:** the recorded `ARRIVAL_DELAY` and next-leg `LATE_AIRCRAFT_DELAY`. Not a like-for-like comparison, so we label it as such.
@@ -130,7 +153,7 @@ The organisers' workbook says: *"Use the limits in this workbook. Any limit you 
 | **E: Messy input** *(stretch)* | The disruption arrives as a free-text notice/message instead of JSON | The one place an LLM should clearly beat rules; measure extraction accuracy |
 
 ### 4.3 Metrics
-- **Gap closed** = (C_FCFS − C_system) / (C_FCFS − C_best). 0% = no better than today, 100% = matches the best possible.
+- **Gap closed** = (C_siloed − C_system) / (C_siloed − C_best). 0% = no better than today's siloed process, 100% = matches the best possible. Also report it against FCFS, to separate "sharing data" from "negotiating trade-offs".
 - **Safety:** hard-constraint violations in final plans (**must be 0**), unsafe proposals blocked by guards, escalation correctness on track B
 - **Convergence:** consensus within ≤3 turns, fallback rate, escalation rate
 - **Fairness:** each agent's regret against its own best feasible option; worst-off agent
@@ -151,6 +174,19 @@ The organisers' workbook says: *"Use the limits in this workbook. Any limit you 
 
 | Field | Source | Real? |
 |---|---|---|
+<<<<<<< HEAD
+| Focal flight: schedule, delays, causes, tail number | `flights.csv` (DOT 2015, delayed flights only) | ✅ Real |
+| Next leg + its recorded knock-on delay (42% of rows) | Same tail, same day, in `flights.csv` | ✅ Real-derived |
+| Next leg for the other 58% | Min turnaround + seeded slack | ❌ Synthetic |
+| Competing arrivals | Delayed arrivals in the file (real) + filler up to the arrival rate | ⚠️ Mixed, labelled per flight |
+| Runway capacity, gates, spare gates, min turnaround | Workbook `airport_capacity` | ⚠️ Organiser synthetic |
+| Arrival rate | ½ × `max_runway_ops_per_hour` (our assumption) × weather cut (seeded, scaled by `WEATHER_DELAY`) | ❌ Synthetic |
+| Wake separation | Workbook `wake_separation` (from FAA JO 7110.65) | ⚠️ Organiser, simplified real rule |
+| Aircraft class / wake category | Heuristic: regional carriers (OO, EV, MQ) → regional; distance > 2,500 mi → widebody/heavy; else narrowbody/large. FAA registry join optional (A-6) | ❌ Heuristic, labelled |
+| Fuel (burn, reserve, contingency, spare) | Workbook `fuel_and_crew`; trip fuel from `AIR_TIME` × cruise burn (our assumption) | ⚠️ Organiser + our assumption |
+| Crew duty, ramp shift, gate-change notice | Workbook `fuel_and_crew`; report time and shift boundaries seeded | ⚠️ Organiser + synthetic |
+| Connecting passengers | Seeded | ❌ Synthetic |
+=======
 | Schedules, delays, causes, tail numbers | DOT 2015 (`flights.csv`) | ✅ Real |
 | Next leg, turnaround slack, gate occupancy demand | Derived from tail chains | ✅ Real-derived |
 | Aircraft type → wake category | **FAA aircraft registry** (N-number → model; free download) | ⚠️ External, current registry vs 2015 fleet; report match rate, fall back to an airline/distance heuristic |
@@ -162,8 +198,9 @@ The organisers' workbook says: *"Use the limits in this workbook. Any limit you 
 | Crew duty and shift limits | 13 h duty from report; 8 h ground shift, overtime 1.5× (workbook) | 📘 Challenge-specified; report / shift **start** times ❌ synthetic |
 | Gate change notice | ≥ 20 min before arrival (workbook) | 📘 Challenge-specified |
 | Connecting passengers | Same-airline departures 45–180 min after arrival, × assumed passenger share | ❌ Synthetic (real-derived structure) |
+>>>>>>> 233fdc4dab4e8e0623b4f7925e48a421132030db
 
-Gotchas: October 2015 airport codes in the Kaggle file are numeric (drop October or map them); times are `hhmm` integers; drop cancelled/diverted rows when computing chains; fix the random seed for every synthetic draw.
+Gotchas: times are `hhmm` integers; departure is origin-local and arrival destination-local (convert with `SCHEDULED_TIME`, watch for arrivals after midnight); fix the random seed for every synthetic draw. (No October rows and no cancelled/diverted rows in this extract.)
 
 ---
 
@@ -172,7 +209,8 @@ Gotchas: October 2015 airport codes in the Kaggle file are numeric (drop October
 Plain Python, no agent framework required. A small state machine is easier to explain and audit.
 
 ```
-data/            raw DOT csv (gitignored), registry, generated scenarios (jsonl)
+flights.csv, challenge2_operational_constraints.xlsx   organiser data (repo root)
+scenarios/       builder: flights.csv + workbook -> Scenario; writes data/scenarios.jsonl
 sim/
   scenario.py    build episode from focal row (+ synthetic context, seeded)
   options.py     deterministic option generator

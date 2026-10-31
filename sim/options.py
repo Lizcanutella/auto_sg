@@ -5,7 +5,27 @@ from __future__ import annotations
 from contracts import SIZE_ORDER, Option, PublicInfo, Scenario
 from sim.simulate import EPS, earliest_landing_min
 
-MAX_SLOTS_PER_ROUTE = 8
+FIRST_SLOTS = 3            # every one of the earliest free slots
+BUCKET_MIN = 15.0          # then the first free slot in each 15-min bucket...
+HORIZON_MIN = 120.0        # ...up to 2 h after the earliest one
+
+
+def pick_slots(reachable: list[float]) -> list[float]:
+    """Dense near the earliest landing, sparse later: at busy hubs slots are 1-2 min apart,
+    so the first N slots alone would cover only a few minutes."""
+    if not reachable:
+        return []
+    picked = reachable[:FIRST_SLOTS]
+    seen_buckets = set()
+    for s in reachable[FIRST_SLOTS:]:
+        offset = s - reachable[0]
+        if offset > HORIZON_MIN:
+            break
+        bucket = int(offset // BUCKET_MIN)
+        if bucket not in seen_buckets:
+            seen_buckets.add(bucket)
+            picked.append(s)
+    return picked
 
 
 def fmt_time(minutes: float) -> str:
@@ -43,9 +63,9 @@ def generate_options(scenario: Scenario | PublicInfo) -> list[Option]:
             continue
         earliest = earliest_landing_min(public, route)
         reachable = [s for s in all_slots if s >= earliest - EPS]
-        slots = reachable[:MAX_SLOTS_PER_ROUTE]
+        slots = pick_slots(reachable)
         if public.rbs_slot_min in reachable and public.rbs_slot_min not in slots:
-            slots.append(public.rbs_slot_min)
+            slots = sorted([*slots, public.rbs_slot_min])
         for slot in slots:
             if slot - earliest <= EPS:
                 absorptions = ["none"]

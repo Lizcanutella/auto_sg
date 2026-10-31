@@ -1,5 +1,7 @@
 pydantic>=2.7
 pytest>=8
+openpyxl>=3.1
+numpy>=1.26
 anthropic>=2.3   # LLM agents (workstream C)
 pandas>=2.2      # benchmark (workstream D)
 pyarrow>=15
