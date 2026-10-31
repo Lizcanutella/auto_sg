@@ -41,11 +41,19 @@ What we add on top, which is what most teams won't have:
 ## 3. System design
 
 ### 3.1 Scenario = one disruption episode
+<<<<<<< HEAD
 Built from a **focal flight** (a row of `flights.csv`) plus context. `flights.csv` holds only delayed flights, not the full schedule, so context is part real, part synthetic:
 - **Competing arrivals:** delayed flights in the file arriving at the same destination in the window are **real**. The rest of the arrival stream, up to the airport's arrival rate, is **synthetic filler** (labelled). On big storm days (e.g. 58 delayed ATL arrivals in one hour) most of the stream is real.
 - **Same-aircraft chain:** when the focal tail's next same-day leg is in the file (42% of rows), its schedule and recorded `LATE_AIRCRAFT_DELAY` are **real**. That is the knock-on delay we try to reduce. Otherwise the next leg is **synthetic** (scheduled after the airport's minimum turnaround plus seeded slack).
 - **Gates:** per-airport gate count and `spare_gates_at_any_time` from the workbook (**synthetic, organiser-provided**). Each scenario gets the planned gate plus the spare gates, with seeded bookings.
 - **Capacity:** arrival rate = half of the workbook's `max_runway_ops_per_hour` (**our assumption**: the other half is departures). For weather rows it is cut by a seeded factor scaled by `WEATHER_DELAY` (**synthetic, labelled**). Late-aircraft rows keep normal capacity: there the disruption is the late inbound aircraft itself.
+=======
+Built from a **focal flight** (a qualifying DOT row) plus its real context:
+- **Competing arrivals:** all real flights scheduled to arrive at the same destination within ±60–90 min. They compete for the reduced runway slots.
+- **Same-aircraft chain:** the focal flight's `TAIL_NUMBER` on the same day gives its **next leg**, which gives turnaround slack and knock-on delay. This is real data.
+- **Gate occupancy:** times on the ground per tail at that airport (arrival to next departure) are **real** demand. Gate *count*, *spare gates at any time* and *minimum turnaround* per airport come from the **challenge workbook** (§3.7). Assigning tails to individual gates (and gate size) is still ours.
+- **Capacity drop:** the base capacity is the workbook's `max_runway_ops_per_hour` and `active_runways` per airport (arrivals + departures combined, so an arrival share must be assumed and stated). For weather scenarios it is reduced by a parameter (e.g. –25%, –40%, –60%), which is still a **synthetic multiplier, labelled**.
+>>>>>>> 233fdc4dab4e8e0623b4f7925e48a421132030db
 - **Decision point:** before departure from the origin, so ground delay at the origin is still an option. This mirrors how Ground Delay Programs work: taking delay on the ground is much cheaper than airborne holding. A second variant at T-45 min, airborne, leaves only holding, rerouting or diverting.
 
 ### 3.2 Options (each one fully computed by the simulator)
@@ -59,11 +67,17 @@ Limits come from the organiser workbook unless marked otherwise.
 
 | Agent | Private data (others can't see it) | Hard constraints (veto, rule ID + source) | Private cost |
 |---|---|---|---|
+<<<<<<< HEAD
 | **ATC** | Slot sequence, arrival rate, wake category of neighbours, taxiway closures | Slot capacity per hour; wake separation (workbook `wake_separation`, from FAA JO 7110.65); gate unreachable when its taxiway is closed; holding-stack limit (ours) | Sector holding minutes, throughput loss |
 | **Pilot / Airline** | Fuel on board, burn rate, connecting passengers, crew report time | Landing fuel ≥ 30 min holding reserve (workbook; alternate fuel optional, off by default); crew duty ≤ 13 h from report (workbook, simplified Part 117); no route through the weather cell | Fuel kg/CO₂, passenger-delay minutes, missed connections |
 | **Ground** | Gate bookings, planned gate, ramp crew shift | Gate free and size-compatible; **gate change notified ≥ 20 min before arrival** (workbook); overtime cap (ours) | Overtime minutes (1.5× after the 8 h shift, workbook), turnaround delay, gate changes |
 
 Fuel on board is derived from the workbook: trip fuel + 5% contingency + 45 min spare holding + 30 min final reserve. We read "45 min spare" as fuel on top of the final reserve, and we state that reading in the demo.
+=======
+| **ATC** | Slot sequence, AAR, wake category of neighbours, taxiway closures | Runway ops per hour ≤ workbook `max_runway_ops_per_hour` (weather-reduced); wake separation from the **workbook table** (simplified FAA JO 7110.65: Super/Heavy/Large/Small, NM on approach, seconds for same-runway departures); gate unreachable when its taxiway is closed | Sector holding minutes, throughput loss |
+| **Pilot / Airline** | Fuel on board, burn rate, alternate, connecting passengers, crew duty limit | Never plan below the **workbook final reserve: 30 min of holding fuel** (+ alternate); fuel on board = trip + **5% contingency** + final reserve + **45 min spare holding** (workbook default), burn **2,400 kg/h narrowbody / 6,500 kg/h widebody**; crew duty ≤ **13 h from report** (workbook, simplified Part 117); no route through the weather cell | Fuel kg/CO₂, passenger-delay minutes, missed connections |
+| **Ground** | Gate schedule, gate size, ramp crew shift ends | Gate free and size-compatible; minimum turnaround (**workbook: 45 min large hub, 35 min others**); **gate change only if decided ≥ 20 min before arrival** (workbook); crew available | Overtime minutes (**workbook: 8 h shift, overtime costs 1.5×**), turnaround delay, tow moves |
+>>>>>>> 233fdc4dab4e8e0623b4f7925e48a421132030db
 
 **Rule:** the LLM never decides legality. Every proposal passes through the sender's own checker before it is sent and through the mediator's schema validator on receipt. An agent **cannot ACCEPT an option its own checker vetoed**; the code enforces this regardless of what the LLM says.
 
@@ -100,6 +114,20 @@ Aggregation rule (the mediator's choice): weighted sum, max-min fairness or Nash
 | Fuel / separation / turnaround arithmetic | ❌ | Tools / simulator |
 | Legality / constraint satisfaction | ❌ | Rule modules |
 | Picking the final plan, fallback | ❌ | Mediator + solver |
+
+### 3.7 Organiser constraints workbook (`challenge2_operational_constraints.xlsx`)
+The organisers' workbook says: *"Use the limits in this workbook. Any limit you change must be stated in your demo."* It replaces most of the values we were going to invent. Its `airport_capacity` sheet is itself labelled **synthetic** by the organisers ("scaled from each airport's traffic in flights.csv"), so in the provenance table these values are **challenge-specified**, not real.
+
+| Sheet | Values | Used by | Replaces |
+|---|---|---|---|
+| `airport_capacity` (324 airports) | size class, active runways, gates, max runway ops/hour, min turnaround, spare gates at any time | scenario builder (A), ATC capacity rule, ground turnaround/gate rules (B) | our gate counts, base AAR estimate, turnaround constant |
+| `wake_separation` | NM on approach and seconds between same-runway departures per leader/follower pair; "any other pair" 3 NM / 60 s | ATC wake rule (B) | B's own FAA table (the workbook has **no B757 rows** and lists only these pairs) |
+| `fuel_and_crew` | final reserve 30 min holding fuel; contingency 5% of trip fuel; holding burn 2,400 / 6,500 kg/h; spare fuel on arrival 45 min holding; crew duty 13 h from report; ground shift 8 h, overtime 1.5×; gate change notice ≥ 20 min before arrival | pilot fuel/duty rules, ground cost and new gate-notice rule (B); fuel on board in scenarios (A) | random fuel on board, invented crew limits |
+| `rules_of_play` | one turn = each agent sends one structured message; consensus within 3 turns; deterministic fallback after 3 turns, log why; output = revised arrival time, gate or flight plan + consensus log per turn | mediator (C) | (already matches our protocol) |
+
+**Still ours (synthetic, labelled):** which gate each tail uses and gate sizes; wake category per aircraft (FAA registry join, else heuristic); connecting-passenger counts; crew report / shift start times; weather capacity reduction factor; the share of `max_runway_ops_per_hour` available to arrivals.
+
+**Where we deviate from the workbook, we must say so in the demo.** Current deviations to resolve (see §11): B's ramp-overtime *hard cap* (the workbook treats overtime as a 1.5× cost, not a limit); B757 wake pairs; the 20-min gate-change notice is not yet a rule.
 
 ---
 
@@ -146,6 +174,7 @@ Aggregation rule (the mediator's choice): weighted sum, max-min fairness or Nash
 
 | Field | Source | Real? |
 |---|---|---|
+<<<<<<< HEAD
 | Focal flight: schedule, delays, causes, tail number | `flights.csv` (DOT 2015, delayed flights only) | ✅ Real |
 | Next leg + its recorded knock-on delay (42% of rows) | Same tail, same day, in `flights.csv` | ✅ Real-derived |
 | Next leg for the other 58% | Min turnaround + seeded slack | ❌ Synthetic |
@@ -157,6 +186,19 @@ Aggregation rule (the mediator's choice): weighted sum, max-min fairness or Nash
 | Fuel (burn, reserve, contingency, spare) | Workbook `fuel_and_crew`; trip fuel from `AIR_TIME` × cruise burn (our assumption) | ⚠️ Organiser + our assumption |
 | Crew duty, ramp shift, gate-change notice | Workbook `fuel_and_crew`; report time and shift boundaries seeded | ⚠️ Organiser + synthetic |
 | Connecting passengers | Seeded | ❌ Synthetic |
+=======
+| Schedules, delays, causes, tail numbers | DOT 2015 (`flights.csv`) | ✅ Real |
+| Next leg, turnaround slack, gate occupancy demand | Derived from tail chains | ✅ Real-derived |
+| Aircraft type → wake category | **FAA aircraft registry** (N-number → model; free download) | ⚠️ External, current registry vs 2015 fleet; report match rate, fall back to an airline/distance heuristic |
+| Wake separation minima | Challenge workbook `wake_separation` | 📘 Challenge-specified |
+| Runways, gate count, spare gates, max runway ops/hour, min turnaround per airport | Challenge workbook `airport_capacity` | 📘 Challenge-specified (labelled synthetic by the organisers) |
+| Arrival rate (AAR) under weather | Workbook `max_runway_ops_per_hour` × arrival share × reduction factor | ⚠️ Arrival share and reduction factor are our assumptions |
+| Gate assignment, gate size, taxiway zone | Generated per airline per airport, within the workbook gate count | ❌ Synthetic |
+| Fuel on board, burn rate | Trip fuel from distance/class + 5% contingency + 30 min final reserve + 45 min spare holding; burn 2,400 / 6,500 kg/h (workbook) | 📘 Challenge-specified rule (trip fuel ours) |
+| Crew duty and shift limits | 13 h duty from report; 8 h ground shift, overtime 1.5× (workbook) | 📘 Challenge-specified; report / shift **start** times ❌ synthetic |
+| Gate change notice | ≥ 20 min before arrival (workbook) | 📘 Challenge-specified |
+| Connecting passengers | Same-airline departures 45–180 min after arrival, × assumed passenger share | ❌ Synthetic (real-derived structure) |
+>>>>>>> 233fdc4dab4e8e0623b4f7925e48a421132030db
 
 Gotchas: times are `hhmm` integers; departure is origin-local and arrival destination-local (convert with `SCHEDULED_TIME`, watch for arrivals after midnight); fix the random seed for every synthetic draw. (No October rows and no cancelled/diverted rows in this extract.)
 
@@ -261,6 +303,9 @@ Time discipline is only 5%, but it is cheap points. Aim to submit a valid MVP ea
 - [ ] Airports in scope (one big hub such as ATL, or top-5)
 - [ ] Global cost weights (pick defaults with citations; sensitivity covers the rest)
 - [ ] Ask the organisers/Airbus mentors: is a benchmark-centred submission fine, as long as the framework is fully built? (Expected: yes.)
+- [ ] **Align with the constraints workbook (§3.7):** switch B's wake table, fuel, duty and turnaround values to the workbook; decide whether to keep the ramp-overtime hard cap (the workbook only prices overtime at 1.5×) and the B757 wake pairs (not in the workbook). Any deviation goes on a demo slide.
+- [ ] Add the 20-min gate-change-notice rule (ground) and the workbook capacity per airport (ATC); agree the arrival share of `max_runway_ops_per_hour`.
+- [ ] Contract change (needs B + C agreement): add a provenance value for challenge-specified data, e.g. `Provenance.CHALLENGE = "challenge"`, so the provenance table can separate it from real and from our synthetic values.
 
 ## 12. Glossary
 **AAR** airport arrival rate (arrivals/hour) · **RBS** Ration-by-Schedule, the FAA's default slot allocation · **GDP** Ground Delay Program · **A-CDM** Airport Collaborative Decision Making · **UDPP** User-Driven Prioritisation Process · **OCC** airline Operations Control Centre · **TRACON** terminal radar approach control · **Wake category** leader/follower aircraft classes that set minimum spacing

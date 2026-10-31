@@ -1,5 +1,9 @@
 pydantic>=2.7
 pytest>=8
+<<<<<<< HEAD
 pandas>=2.2
 openpyxl>=3.1
 numpy>=1.26
+=======
+anthropic>=2.3   # LLM agents (workstream C)
+>>>>>>> 233fdc4dab4e8e0623b4f7925e48a421132030db
