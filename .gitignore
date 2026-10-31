@@ -4,3 +4,9 @@ __pycache__/
 data/raw/
 *.parquet
 .env
+
+# benchmark artefacts (regenerate with python -m bench.run)
+results/cache/
+results/logs/
+runs/
+results/sensitivity/

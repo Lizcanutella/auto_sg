@@ -1,9 +1,11 @@
 pydantic>=2.7
 pytest>=8
-<<<<<<< HEAD
-pandas>=2.2
 openpyxl>=3.1
 numpy>=1.26
-=======
 anthropic>=2.3   # LLM agents (workstream C)
->>>>>>> 233fdc4dab4e8e0623b4f7925e48a421132030db
+pandas>=2.2      # benchmark (workstream D)
+pyarrow>=15
+numpy>=1.26
+matplotlib>=3.8
+tabulate>=0.9
+streamlit>=1.40
