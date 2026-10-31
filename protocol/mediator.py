@@ -53,16 +53,31 @@ def fallback_option(public: Scenario, feasible_ids: list[str]) -> str:
 
 class ClaimVerifier:
     """Independent check of verifiable claims (models an airline-to-ATC fuel data link / post-event
-    flight-data audit). Holds only the pilot's view; the mediator itself never sees it."""
+    flight-data audit). Holds only the pilot's view; the mediator itself never sees it.
+
+    Minimum fuel = even the best plan that still lands at the destination leaves less than
+    MIN_FUEL_MARGIN_MIN of holding fuel above the legal minimum (alternate + final reserve). If no
+    destination landing exists, the best diversion is used."""
 
     def __init__(self, pilot_view: Scenario):
         self.view = pilot_view
 
-    def verify(self, claim: Claim, fallback_id: str) -> tuple[bool, str]:
-        o = pilot_outcome(self.view, option_by_id(generate_options(self.view), fallback_id))
-        margin_min = (o.fuel_at_landing_kg - o.required_landing_fuel_kg) / self.view.pilot.holding_burn_kg_per_min
-        ok = margin_min < MIN_FUEL_MARGIN_MIN
-        return ok, f"fuel margin at fallback plan {margin_min:.1f} min of holding (threshold {MIN_FUEL_MARGIN_MIN:.0f})"
+    def margin_min(self) -> tuple[float, str]:
+        burn = self.view.pilot.holding_burn_kg_per_min
+        best: dict[bool, tuple[float, str]] = {}
+        for o in generate_options(self.view):
+            out = pilot_outcome(self.view, o)
+            m = (out.fuel_at_landing_kg - out.required_landing_fuel_kg) / burn
+            div = o.slot_min is None
+            if div not in best or m > best[div][0]:
+                best[div] = (m, o.option_id)
+        return best.get(False) or best[True]
+
+    def verify(self, claim: Claim, fallback_id: str | None = None) -> tuple[bool, str]:
+        m, oid = self.margin_min()
+        ok = m < MIN_FUEL_MARGIN_MIN
+        return ok, (f"best destination plan {oid} leaves {m:.1f} min of holding fuel above the legal minimum "
+                    f"(minimum-fuel threshold {MIN_FUEL_MARGIN_MIN:.0f})")
 
 
 @dataclass

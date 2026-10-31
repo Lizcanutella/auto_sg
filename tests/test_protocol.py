@@ -188,9 +188,11 @@ def test_adversarial_track_has_10_plus_cases_and_no_unsafe_outcome():
     assert sum(r["attempted_unsafe_moves"] > 0 for r in rows) >= 10
 
 
-def test_false_min_fuel_claim_rejected_when_verified():
+def test_min_fuel_claims_verified_against_the_pilot_data():
     rows = misreport.run(misreport.load_scenarios())
-    verified = [c for r in rows if r["condition"] == "liar, claim verified" for c in r["claims"]]
-    unverified = [c for r in rows if r["condition"] == "liar, claim unverified" for c in r["claims"]]
-    assert verified and not any(c["accepted"] for c in verified)
-    assert unverified and all(c["accepted"] for c in unverified)
+    by = {(r["scenario"], r["condition"]): r["claims"] for r in rows}
+    # episode 001: plenty of fuel -> false claim, rejected only when verified
+    assert not by[("episode_001", "liar, claim verified")][0]["accepted"]
+    assert by[("episode_001", "liar, claim unverified")][0]["accepted"]
+    # episode 002: airborne with 5 min margin -> the claim is TRUE and is accepted
+    assert by[("episode_002", "liar, claim verified")][0]["accepted"]
