@@ -15,9 +15,9 @@ def test_benchmark_metrics_and_chart(tmp_path):
     df.to_parquet(tmp_path / "results.parquet")
     neg = df[df.system == "scripted"]
     assert len(neg) == 6 and neg.violations.sum() == 0
-    assert set(df.system) == {"fcfs", "best_possible", "scripted"}
+    assert set(df.system) == {"siloed", "fcfs", "best_possible", "scripted"}
     ep1 = neg[(neg.scenario_id == "episode_001") & (neg.disclosure == "D2")].iloc[0]
-    assert ep1.gap_closed == 1.0
+    assert ep1.gap_closed == 1.0 and ep1.gap_closed_fcfs == 1.0     # reaches the best possible plan
     md = metrics.to_markdown(tmp_path)
     assert "Negotiation" in md and "| scripted | D2 | nash |" in md
     assert charts.key_chart(tmp_path).exists()

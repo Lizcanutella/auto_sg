@@ -86,7 +86,7 @@ def gap_chart(df: pd.DataFrame, path: Path, label_col: str, labels: list, title:
         ax.set_ylim(-0.05, 1.08)
         ax.set_yticks([0, 0.25, 0.5, 0.75, 1.0], ["0%", "25%", "50%", "75%", "100%"])
         ax.axhline(0, color=INK_2, linewidth=0.8)
-    axes[0].set_ylabel("Gap closed\n(0% = FCFS, 100% = best possible)", fontsize=9, color=INK_2)
+    axes[0].set_ylabel("Gap closed\n(0% = today's siloed process,\n100% = best possible)", fontsize=9, color=INK_2)
     handles, labs = axes[0].get_legend_handles_labels()
     if not handles:
         for ax in axes[1:]:

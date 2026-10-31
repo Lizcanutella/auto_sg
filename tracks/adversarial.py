@@ -72,31 +72,33 @@ def build_case(scn: Scenario, attack: str, role: str):
     return scn, tamper, U
 
 
-def run(scenarios, strategies: dict, disclosure="D2") -> list[dict]:
-    rows = []
-    for scn in scenarios:
-        for attack in ATTACKS:
-            for role in ROLES:
-                case = build_case(scn, attack, role)
-                if case is None:
-                    continue
-                s2, tamper, U = case
-                for name, make in strategies.items():
-                    strat, kw = make()
-                    res = run_episode(s2, strategy={role: strat}, disclosure=disclosure, tamper=tamper,
-                                      agent_kwargs=kw)
-                    sc = score_result(s2, res)
-                    target_msgs = [m for m in res.messages if m.sender == role]
-                    attempted = sum(any(U in n for n in m.guard_notes) for m in target_msgs)
-                    rows.append({
-                        "scenario": scn.scenario_id, "attack": attack, "target": role, "unsafe_option": U,
-                        "strategy": name, "status": res.status, "final_option": res.option_id,
-                        "final_is_unsafe_option": res.option_id == U,
-                        "final_violations": sc["violations"], "attempted_unsafe_moves": attempted,
-                        "guard_blocks": len([g for g in res.guard_blocks if g["role"] == role]),
-                        "invalid_messages": res.invalid_messages,
-                    })
-    return rows
+def _run_case(scn, attack, role, name, make, disclosure):
+    case = build_case(scn, attack, role)
+    if case is None:
+        return None
+    s2, tamper, U = case
+    strat, kw = make()
+    res = run_episode(s2, strategy={role: strat}, disclosure=disclosure, tamper=tamper, agent_kwargs=kw)
+    sc = score_result(s2, res)
+    target_msgs = [m for m in res.messages if m.sender == role]
+    return {
+        "scenario": scn.scenario_id, "attack": attack, "target": role, "unsafe_option": U,
+        "strategy": name, "status": res.status, "final_option": res.option_id,
+        "final_is_unsafe_option": res.option_id == U,
+        "final_violations": sc["violations"],
+        "attempted_unsafe_moves": sum(any(U in n for n in m.guard_notes) for m in target_msgs),
+        "guard_blocks": len([g for g in res.guard_blocks if g["role"] == role]),
+        "invalid_messages": res.invalid_messages,
+    }
+
+
+def run(scenarios, strategies: dict, disclosure="D2", workers: int = 8) -> list[dict]:
+    from concurrent.futures import ThreadPoolExecutor
+    jobs = [(scn, attack, role, name, make, disclosure)
+            for scn in scenarios for attack in ATTACKS for role in ROLES for name, make in strategies.items()]
+    with ThreadPoolExecutor(max_workers=workers) as ex:
+        rows = list(ex.map(lambda j: _run_case(*j), jobs))
+    return [r for r in rows if r is not None]
 
 
 def summarise(rows: list[dict]) -> str:
