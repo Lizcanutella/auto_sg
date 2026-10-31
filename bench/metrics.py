@@ -14,7 +14,7 @@ import pandas as pd
 
 from contracts import ROLES
 
-# Claude Haiku 5.5 list price per million tokens for prompts <= 100K tokens. VERIFY before quoting.
+# Claude Haiku 5.5 list price per million tokens for prompts <= 100K tokens (checked 31 Oct 2026).
 PRICE_IN_PER_MTOK = 0.10
 PRICE_OUT_PER_MTOK = 0.50
 GROUP = ["system", "disclosure", "aggregation", "acceptance"]
@@ -56,6 +56,8 @@ def summary(df: pd.DataFrame) -> pd.DataFrame:
             N=n,
             n_gap=int(g.gap_closed.notna().sum()),
             gap_closed=boot_ci(g.gap_closed),
+            n_gap_vs_fcfs=int(g.gap_closed_vs_fcfs.notna().sum()) if "gap_closed_vs_fcfs" in g else 0,
+            gap_closed_vs_fcfs=boot_ci(g.gap_closed_vs_fcfs) if "gap_closed_vs_fcfs" in g else (math.nan,) * 3,
             violations=int(g.violations.sum()),
             consensus=boot_ci((g.status == "CONSENSUS").astype(float)),
             fallback=boot_ci((g.status == "FALLBACK").astype(float)),
@@ -131,21 +133,29 @@ def to_markdown(results: Path) -> str:
     tracks = df.groupby("track").scenario_id.nunique().to_dict()
     s = summary(df)
     lines = [f"# Benchmark results\n", f"Scenarios: **{n_scen}** (by track: {tracks}). "
-             f"Gap closed = (FCFS − system) / (FCFS − best possible), only where FCFS ≠ best "
-             f"(n_gap). Brackets = 95% bootstrap CI.\n"]
-    base = df[df.system.isin(["fcfs", "best_possible"])]
+             f"Gap closed = (siloed − system) / (siloed − best possible): the share of the price of silos the "
+             f"system recovers, only where siloed ≠ best (n_gap). *vs FCFS* = the same against FCFS (data shared, "
+             f"simple rules), i.e. what negotiation adds beyond sharing. Brackets = 95% bootstrap CI.\n"]
+    base = df[df.system.isin(["siloed", "fcfs", "best_possible"])]
     lines.append("## Baselines\n")
     for name, g in base.groupby("system"):
         lines.append(f"- **{name}**: plan {int((g.status == 'CONSENSUS').sum())}, escalate "
                      f"{int((g.status == 'ESCALATE').sum())}, mean global cost "
                      f"${g.global_cost_usd.mean():,.0f}")
+    costs = base.pivot_table(index="scenario_id", columns="system", values="global_cost_usd").dropna()
+    if {"siloed", "fcfs", "best_possible"} <= set(costs.columns) and len(costs):
+        price = costs.siloed - costs.best_possible
+        lines.append(f"- **price of silos** (siloed − best): > $0 in {(price > 0.5).mean():.0%} of {len(costs)} "
+                     f"solvable scenarios, mean {fmt_ci(boot_ci(price), money=True)}; sharing data with simple rules "
+                     f"(FCFS) recovers {(costs.siloed - costs.fcfs).sum() / max(price.sum(), 1e-9):.0%} of it")
     lines.append("\n## Negotiation\n")
-    lines.append("| system | level | aggregation | acceptance | N | n_gap | gap closed | violations | consensus | "
-                 "fallback | escalate | ≤2 turns | worst-off regret (USD) | guard blocks |")
-    lines.append("|" + "---|" * 14)
+    lines.append("| system | level | aggregation | acceptance | N | n_gap | gap closed | vs FCFS (n) | violations | "
+                 "consensus | fallback | escalate | ≤2 turns | worst-off regret (USD) | guard blocks |")
+    lines.append("|" + "---|" * 15)
     for _, r in s.sort_values(GROUP).iterrows():
         lines.append(f"| {r.system} | {r.disclosure} | {r.aggregation} | {r.acceptance} | {r.N} | {r.n_gap} | "
-                     f"{fmt_ci(r.gap_closed, pct=True)} | {r.violations} | {fmt_ci(r.consensus, pct=True)} | "
+                     f"{fmt_ci(r.gap_closed, pct=True)} | {fmt_ci(r.gap_closed_vs_fcfs, pct=True)} ({r.n_gap_vs_fcfs}) | "
+                     f"{r.violations} | {fmt_ci(r.consensus, pct=True)} | "
                      f"{fmt_ci(r.fallback, pct=True)} | {fmt_ci(r.escalate, pct=True)} | "
                      f"{fmt_ci(r.within_2_turns, pct=True)} | {fmt_ci(r.worst_regret, money=True)} | {r.guard_blocks} |")
     llm = s[s.system == "llm"]

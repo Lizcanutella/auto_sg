@@ -10,7 +10,7 @@ Follows `PLAN.md` §9. Numbers marked ⟨…⟩ must be filled from `results/met
 - ATC knows runway capacity and separation. The airline knows fuel and connections. The ground handler knows gates and crew.
 - Today: Ration-by-Schedule slots, then phone calls and manual gate boards.
 
-*Notes:* name the user and the cost per delay minute (A4A ~$75 per block minute; **verify before the slide**).
+*Notes:* name the user and the cost per delay minute (A4A 2024: $100.76 per block minute, of which $33.06 fuel; verified 31 Oct).
 
 ### 2. The insight (0:20–0:50)
 **Title:** Each agent keeps its own data. What does that cost?

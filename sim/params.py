@@ -55,10 +55,11 @@ class CostParams(BaseModel):
     model_config = ConfigDict(frozen=True)
 
     # Airline (pilot agent)
-    # A4A puts the US aircraft block-minute cost at ~$74/min (2019, VERIFY), fuel included.
-    # Fuel is costed separately below, so we use the non-fuel share. ASSUMPTION: ~2/3.
-    delay_usd_per_min: float = 50.0
-    fuel_usd_per_kg: float = 0.80               # ~$2.50/US gal jet fuel. VERIFY current price.
+    # A4A, U.S. passenger carrier delay costs (2024): block time costs $100.76/min, of which fuel $33.06.
+    # Fuel is costed separately below, so we use the non-fuel part: 100.76 - 33.06 = $67.70/min.
+    delay_usd_per_min: float = 67.70
+    # IATA June 2026 outlook: jet fuel averages $152/bbl in 2026; 1 bbl = 159 L x 0.8 kg/L = 127 kg.
+    fuel_usd_per_kg: float = 1.20
     missed_connection_usd_per_pax: float = 250.0  # rebooking + care. ASSUMPTION
     turbulence_usd_per_min: float = 20.0        # shadow cost for pax comfort/injury risk. ASSUMPTION
     diversion_fixed_usd: float = 25_000.0       # handling, crew, pax care. ASSUMPTION
@@ -66,7 +67,7 @@ class CostParams(BaseModel):
     ramp_usd_per_crew_min: float = 1.0          # ~$60/h loaded labour, normal time. ASSUMPTION
     overtime_multiplier: float = 1.5            # organiser workbook: overtime costs 1.5x after the 8 h shift
     gate_change_usd: float = 300.0              # re-staffing, pax re-direction. ASSUMPTION
-    knock_on_delay_usd_per_min: float = 50.0    # next-leg (turnaround) delay, same rate as delay
+    knock_on_delay_usd_per_min: float = 67.70   # next-leg (turnaround) delay, same rate as delay
     # ATC (shadow costs: ATC pays no money, these encode workload and throughput)
     holding_usd_per_min: float = 30.0           # ASSUMPTION
     reroute_coordination_usd: float = 150.0     # ASSUMPTION

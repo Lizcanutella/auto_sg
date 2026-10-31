@@ -166,11 +166,12 @@ with tab_neg:
                         st.table(pd.DataFrame([{k: r.get(k) for k in ("rule_id", "passed", "value", "limit", "unit",
                                                                     "source", "detail")} for r in rules]))
                 if scn is not None:
-                    from baselines import best_possible, fcfs_rbs
+                    from baselines import best_possible, fcfs_rbs, siloed
                     from sim import evaluate, generate_options, option_by_id
                     rows = []
                     for name, oid in [("Negotiated", d["option_id"]),
-                                      ("Today's process (FCFS/RBS)", getattr(fcfs_rbs.plan(scn).chosen, "option", None)),
+                                      ("Today's process (siloed)", getattr(siloed.plan(scn).chosen, "option", None)),
+                                      ("Data shared, simple rules (FCFS/RBS)", getattr(fcfs_rbs.plan(scn).chosen, "option", None)),
                                       ("Best possible (all data)", getattr(best_possible.plan(scn).chosen, "option", None))]:
                         if oid is None:
                             continue

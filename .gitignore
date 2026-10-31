@@ -6,7 +6,13 @@ data/raw/
 .env
 
 # benchmark artefacts (regenerate with python -m bench.run)
-results/cache/
-results/logs/
+results/**/cache/
+results/**/logs/
 runs/
-results/sensitivity/
+results/**/sensitivity/
+
+# editor swap/backup files (vim swap files of .env contain the API key)
+.env.*
+*.swp
+*.swo
+*~

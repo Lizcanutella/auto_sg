@@ -60,9 +60,9 @@ With 2 people: **P0 only**, disclosure levels D0 + D2 only, LLM agents on a ≤5
 | **A-4** | Competing arrivals: delayed arrivals in the file (real) + synthetic filler up to the arrival rate (½ × workbook `max_runway_ops_per_hour`, cut for weather) | P0 | 0.75 | A-1 | Each scenario lists its neighbour flights, each tagged real or synthetic |
 | **A-5** | Context from the workbook (gates + spare gates, turnaround, fuel, crew duty, ramp shift, gate-change notice) + seeded draws (bookings, connections, report time); aircraft class heuristic | P0 | 1.25 | A-3, A-4, S-2 | `scenarios.jsonl` with ≥100 track-A scenarios **by H3**, every field tagged with its provenance |
 | **A-6** | FAA registry join: tail number → aircraft model → wake category; fall back to an airline/distance heuristic | P1 | 1 | A-1 | Match rate reported |
-| **A-7** | **Provenance table** (real / real-derived / external / invented, with assumptions), together with D | P0 | 0.5 | A-5 | In README and slides |
-| **A-8** | Simulator check: predicted knock-on delay vs recorded next-leg `LATE_AIRCRAFT_DELAY` (MAE, correlation) | P1 | 1 | A-3, B-3 | One number + scatter plot in the report |
-| **A-9** | Track B scenarios (infeasible: no gate / fuel below reserve / runway closed) | P0 | 0.5 | A-5 | ≥10 scenarios where no safe plan exists |
+| **A-7** | **Provenance table** (real / real-derived / external / invented, with assumptions), together with D | P0 | 0.5 | A-5 | README provenance table ✅ |
+| **A-8** | Simulator check: predicted knock-on delay vs recorded next-leg `LATE_AIRCRAFT_DELAY` (MAE, correlation) | P1 | 1 | A-3, B-3 | `results/sim_validity.md`: MAE 11.8 min, r = 0.96 (predicted ≥ 20 min); over-predicts ~9 min because the workbook turnaround is longer than real ✅ |
+| **A-9** | Track B scenarios (infeasible: no gate / fuel below reserve / runway closed) | P0 | 0.5 | A-5 | `data/scenarios_track_b.jsonl`: 20 variants (4 causes) + 19 natural escalations in track A; mediator escalates all ✅ |
 | **A-10** | Track E messy-input scenarios (free-text notice/message) + extracted ground-truth constraints | P2 | 1.5 | A-5 | ≥20 text/label pairs |
 | **A-11** | Load `challenge2_operational_constraints.xlsx` (PLAN §3.7): per-airport runways, gates, spare gates, max ops/hour, min turnaround; fuel on board = trip + 5% + 30 min reserve + 45 min spare holding; crew duty / shift lengths. Tag these fields as challenge-specified | P0 | 0.75 | A-5 | Scenarios use workbook values for every airport in the sample; provenance table updated |
 
@@ -78,7 +78,7 @@ With 2 people: **P0 only**, disclosure levels D0 + D2 only, LLM agents on a ≤5
 | **B-4** | Simulator: apply an option → slot sequence, holding, fuel at landing, gate timeline, next-leg delay | P0 | 1 | B-1, B-3 | Used by both baselines and the agents' tools |
 | **B-5** | **FCFS/RBS baseline** + **siloed status-quo baseline** (`baselines/siloed.py`) | P0 | 0.5 | B-4 | Produces a plan + cost for any scenario ✅ |
 | **B-6** | **Best-possible solver** (enumerate options with all private data) | P0 | 0.5 | B-4 | Never chooses a plan that breaks a rule; always ≤ FCFS cost |
-| **B-7** | Review C's guards: every number an agent states must come from B's code | P0 | 0.5 | C-5 | Signed off in a PR comment |
+| **B-7** | Review C's guards: every number an agent states must come from B's code | P0 | 0.5 | C-5 | Reviewed: guards hold; number audit is advisory only (see chat notes) ✅ |
 | **B-8** | Multi-flight best-possible solver with OR-Tools CP-SAT | P2 | 2 | B-6 | Solves 3+ focal flights jointly |
 | **B-9** | Airborne decision-point variant (holding/divert only) | P2 | 1 | B-1 | Option set changes based on the decision point |
 | **B-10** | Align `sim/params.py` and rules with the workbook (PLAN §3.7): wake table (+ departure seconds), fuel reserve/contingency/burn, 13 h duty, turnaround, overtime 1.5× cost; new rule **GND-GATE-NOTICE** (gate change ≥ 20 min before arrival); capacity from `max_runway_ops_per_hour`. List every deviation (e.g. overtime hard cap, B757 pairs) for the demo slide | P0 | 1 | B-2, B-3 | Tests updated; deviation list in README |

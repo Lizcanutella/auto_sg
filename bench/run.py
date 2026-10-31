@@ -22,7 +22,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from baselines import best_possible, fcfs_rbs
+from baselines import best_possible, fcfs_rbs, siloed
 from contracts import ROLES, Scenario
 from protocol import run_episode, score_result
 from sim import evaluate, evaluate_all, generate_options, option_by_id
@@ -30,6 +30,7 @@ from sim.params import DEFAULT_COSTS, CostParams
 from tracks.common import load_scenarios
 
 OUT = Path("results")
+GAP_REFERENCE = "siloed-v1"   # in the cache key: rows cached under the old FCFS reference are not reused
 LEVELS = ("D0", "D1", "D2", "D3")
 AGGS = ("weighted_sum", "maxmin", "nash")
 
@@ -43,12 +44,12 @@ def _scenario_hash(s: Scenario) -> str:
 
 
 def baseline_rows(s: Scenario, p: CostParams) -> tuple[list[dict], dict]:
-    """FCFS and best-possible rows + the reference numbers every negotiated row is compared with."""
+    """Siloed, FCFS and best-possible rows + the reference numbers every negotiated row is compared with."""
     ev = evaluate_all(s, p)
     feas = [e for e in ev if e.feasible]
-    ref = {"fcfs": None, "best": None, "role_min": {}}
+    ref = {"siloed": None, "fcfs": None, "best": None, "role_min": {}}
     rows = []
-    for name, mod in (("fcfs", fcfs_rbs), ("best_possible", best_possible)):
+    for name, mod in (("siloed", siloed), ("fcfs", fcfs_rbs), ("best_possible", best_possible)):
         t0 = time.time()
         r = mod.plan(s, p)
         row = _base_row(s, name, "-", "-", "-")
@@ -60,7 +61,7 @@ def baseline_rows(s: Scenario, p: CostParams) -> tuple[list[dict], dict]:
             for role, c in r.chosen.costs.items():
                 row[f"cost_{role}"] = c.total_usd
         rows.append(row)
-        ref["fcfs" if name == "fcfs" else "best"] = row
+        ref["best" if name == "best_possible" else name] = row
     for role in ROLES:
         ref["role_min"][role] = min((e.costs[role].total_usd for e in feas), default=None)
     return rows, ref
@@ -120,14 +121,18 @@ def negotiated_row(s: Scenario, system: str, level: str, agg: str, acceptance: s
 
 
 def _add_gap(row: dict, ref: dict):
-    f, b = ref["fcfs"], ref["best"]
-    row["fcfs_cost_usd"] = f["global_cost_usd"] if f else math.nan
+    """gap_closed: share of the price of silos (siloed - best) the system recovers.
+    gap_closed_vs_fcfs: the same against FCFS, i.e. beyond what sharing data with simple rules gets."""
+    b = ref["best"]
     row["best_cost_usd"] = b["global_cost_usd"] if b else math.nan
-    denom = row["fcfs_cost_usd"] - row["best_cost_usd"]
-    if row["status"] == "ESCALATE" or not denom or math.isnan(denom) or denom < 1e-6 or math.isnan(row["global_cost_usd"]):
-        row["gap_closed"] = math.nan
-    else:
-        row["gap_closed"] = (row["fcfs_cost_usd"] - row["global_cost_usd"]) / denom
+    for name, col in (("siloed", "gap_closed"), ("fcfs", "gap_closed_vs_fcfs")):
+        r = ref[name]
+        row[f"{name}_cost_usd"] = r["global_cost_usd"] if r else math.nan
+        denom = row[f"{name}_cost_usd"] - row["best_cost_usd"]
+        if row["status"] == "ESCALATE" or not denom or math.isnan(denom) or denom < 1e-6 or math.isnan(row["global_cost_usd"]):
+            row[col] = math.nan
+        else:
+            row[col] = (row[f"{name}_cost_usd"] - row["global_cost_usd"]) / denom
     row["correct_escalation"] = (row["status"] == "ESCALATE") == (b is not None and b["status"] == "ESCALATE")
 
 
@@ -166,7 +171,7 @@ def run(scenarios: list[Scenario], *, levels=LEVELS, aggs=AGGS, acceptance=("bud
     for kind, lst, dest in (("s", jobs, todo), ("l", llm_jobs, todo_llm)):
         for s, system, lvl, agg, acc in lst:
             from agents.llm import MODEL
-            k = _key(_scenario_hash(s), system, lvl, agg, acc, p_json, MODEL if system == "llm" else "")
+            k = _key(_scenario_hash(s), system, lvl, agg, acc, p_json, MODEL if system == "llm" else "", GAP_REFERENCE)
             f = cache_dir / f"{k}.json"
             if use_cache and f.exists():
                 rows.append(json.loads(f.read_text()))
