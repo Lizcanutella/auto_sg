@@ -1,6 +1,8 @@
 """Workstream D smoke tests: benchmark runner, metrics, charts, UI."""
 from __future__ import annotations
 
+from pathlib import Path
+
 import pandas as pd
 
 from bench import charts, metrics
@@ -31,7 +33,8 @@ def test_bootstrap_ci_brackets_the_mean():
 
 def test_ui_runs_a_negotiation_and_records_approval():
     from streamlit.testing.v1 import AppTest
-    at = AppTest.from_file("ui/app.py", default_timeout=120).run()
+    # Absolute path: newer Streamlit resolves relative paths against this test file, not the repo root.
+    at = AppTest.from_file(str(Path(__file__).resolve().parent.parent / "ui" / "app.py"), default_timeout=120).run()
     at.sidebar.button[0].click().run()
     assert not at.exception
     assert any("CONSENSUS" in s.value for s in at.success)
