@@ -293,7 +293,8 @@ class Mediator:
             scenario_id=self.sid, status=status, option_id=oid, turns=turn, disclosure=self.disclosure,
             aggregation=self.aggregation, fallback_id=F, n_options=len(self.option_ids), n_feasible=nJ,
             reason=reason, invalid_messages=self.invalid,
-            guard_blocks=[g for a in self.agents.values() for g in getattr(a, "guard_log", [])],
+            guard_blocks=[g for a in self.agents.values() for g in getattr(a, "guard_log", [])
+                          if g.get("severity", "unsafe") == "unsafe"],
             claims=self.claims, messages=self.messages, log=self.log,
             strategies={r: getattr(a, "strategy", "?") for r, a in self.agents.items()},
             agent_stats={r: dict(getattr(a, "stats", {})) for r, a in self.agents.items()})

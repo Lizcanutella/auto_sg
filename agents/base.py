@@ -166,9 +166,11 @@ class Agent:
         raise NotImplementedError
 
     # ------------------------------------------------------------------ guard
-    def _block(self, what: str, notes: list[str]):
+    def _block(self, what: str, notes: list[str], severity: str = "unsafe"):
+        """severity "unsafe": a move that would break a rule or the protocol was stopped (safety metric);
+        "cleanup": a harmless malformed field was dropped (reported separately)."""
         notes.append(what)
-        self.guard_log.append({"turn": self.ctx.turn, "role": self.role, "blocked": what})
+        self.guard_log.append({"turn": self.ctx.turn, "role": self.role, "blocked": what, "severity": severity})
 
     def _finalise(self, d: Draft) -> AgentMessage:
         c, notes = self.ctx, list(d.notes)
@@ -187,15 +189,15 @@ class Agent:
             self._block(f"COUNTER with {oid} blocked: another organisation vetoed it", notes)
             typ, oid = "REJECT", None
         acceptable = []
-        for a in d.acceptable:
+        for a in (d.acceptable if typ == "ACCEPT" else []):   # the field only means something on an ACCEPT
             if a == oid:
                 continue
-            if not self.is_safe(a) or a not in c.proposed:
-                self._block(f"'acceptable' entry {a} dropped: unsafe for me or not proposed", notes)
-                continue
-            acceptable.append(a)
-        if typ != "ACCEPT":
-            acceptable = []
+            if not self.is_safe(a):
+                self._block(f"'acceptable' entry {a} dropped: fails own rules {self.failed_rules(a)}", notes)
+            elif a not in c.proposed:
+                self._block(f"'acceptable' entry {a} dropped: it was not proposed", notes, "cleanup")
+            else:
+                acceptable.append(a)
         counter_kind = d.counter_kind if typ == "COUNTER" else None
         if typ == "COUNTER" and counter_kind not in ("concede", "reveal", "variant"):
             counter_kind = "variant"
