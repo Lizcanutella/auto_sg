@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Price of Silos</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;800;900&family=IBM+Plex+Mono:wght@400;500;600&family=Public+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* Layout idea: an ATC strip bay. Each agent message is a flight progress strip, colour-coded by
+   organisation, racked turn by turn; results read like an ops board. One loud moment: the split-flap board. */
+:root {
+  --board: #e9ece6;        /* strip bay background */
+  --panel: #f7f8f4;        /* cards, strips */
+  --ink: #142029;          /* primary text */
+  --ink-2: #4e5a63;        /* secondary text */
+  --line: #c9d0c8;         /* rules, borders */
+  --signal: #c2560a;       /* the one accent: signal amber */
+  --atc: #2f6fb5;  --atc-bg: #dfe9f5;
+  --pilot: #9a6b00; --pilot-bg: #f5ebc9;
+  --ground: #2e7d4f; --ground-bg: #dfeee3;
+  --med: #6b5ca5;  --med-bg: #e8e4f3;
+  --ok: #1f7a4a; --warn: #a96a00; --bad: #b42d23;
+  --s1: #2a78d6; --s2: #eb6834;   /* chart series (validated reference palette, light) */
+  --flap: #1b232a; --flap-ink: #f3efe2; --flap-edge: #0e1418;
+  --font-display: "Big Shoulders Display", "Arial Narrow", sans-serif;
+  --font-body: "Public Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --board: #10161b; --panel: #172028; --ink: #e8ece9; --ink-2: #a5b0b6; --line: #2c3842; --signal: #f08a3c;
+    --atc: #7fb0ea; --atc-bg: #1a2b3d; --pilot: #e2bd5a; --pilot-bg: #2e2816; --ground: #6fc493; --ground-bg: #182e22;
+    --med: #b3a6e8; --med-bg: #251f3a; --ok: #5cc28a; --warn: #e2b24a; --bad: #f07a6f; --s1: #3987e5; --s2: #d95926;
+    --flap: #0b1014; --flap-ink: #f3efe2; --flap-edge: #000; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --board: #10161b; --panel: #172028; --ink: #e8ece9; --ink-2: #a5b0b6; --line: #2c3842; --signal: #f08a3c;
+  --atc: #7fb0ea; --atc-bg: #1a2b3d; --pilot: #e2bd5a; --pilot-bg: #2e2816; --ground: #6fc493; --ground-bg: #182e22;
+  --med: #b3a6e8; --med-bg: #251f3a; --ok: #5cc28a; --warn: #e2b24a; --bad: #f07a6f; --s1: #3987e5; --s2: #d95926;
+  --flap: #0b1014; --flap-ink: #f3efe2; --flap-edge: #000; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } * { animation: none !important; transition: none !important; } }
+body { margin: 0; background: var(--board); color: var(--ink); font: 16px/1.55 var(--font-body); }
+a { color: inherit; }
+:focus-visible { outline: 2px solid var(--signal); outline-offset: 2px; }
+.wrap { max-width: 1180px; margin: 0 auto; padding: 0 24px; }
+h1, h2, h3 { font-family: var(--font-display); text-wrap: balance; margin: 0; letter-spacing: .01em; }
+h2 { font-size: clamp(2rem, 4vw, 2.9rem); font-weight: 800; line-height: 1; text-transform: uppercase; }
+h3 { font-size: 1.35rem; font-weight: 800; text-transform: uppercase; }
+p { margin: 0; }
+.mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+.lede { color: var(--ink-2); max-width: 64ch; font-size: 1.06rem; }
+.eyebrow { font: 500 .78rem/1 var(--font-mono); letter-spacing: .14em; text-transform: uppercase; color: var(--ink-2); }
+section { padding: 72px 0 24px; }
+.sec-head { display: grid; gap: 12px; margin-bottom: 28px; }
+
+/* nav */
+nav.top { position: sticky; top: 0; z-index: 10; background: color-mix(in srgb, var(--board) 88%, transparent); backdrop-filter: blur(8px); border-bottom: 1px solid var(--line); }
+nav.top .wrap { display: flex; align-items: center; gap: 22px; height: 54px; overflow-x: auto; }
+nav.top .brand { font: 900 1.25rem/1 var(--font-display); text-transform: uppercase; letter-spacing: .04em; white-space: nowrap; }
+nav.top .brand b { color: var(--signal); }
+nav.top a.l { font: 500 .8rem var(--font-mono); text-decoration: none; color: var(--ink-2); text-transform: uppercase; letter-spacing: .08em; white-space: nowrap; }
+nav.top a.l:hover { color: var(--ink); }
+nav.top .gh { margin-left: auto; }
+
+/* hero */
+.hero { padding: 56px 0 8px; display: grid; gap: 28px; }
+.hero h1 { font-size: clamp(2.6rem, 7.2vw, 5.6rem); font-weight: 900; line-height: .92; text-transform: uppercase; }
+.hero h1 em { font-style: normal; color: var(--signal); }
+.board { background: var(--flap); border-radius: 10px; padding: 16px 16px 12px; box-shadow: 0 1px 0 var(--flap-edge), 0 18px 40px -24px #000a; overflow-x: auto; }
+.board table { border-collapse: separate; border-spacing: 0 6px; width: 100%; min-width: 760px; }
+.board th { font: 500 .66rem var(--font-mono); letter-spacing: .14em; color: #8f9aa1; text-align: left; padding: 0 8px 2px; }
+.board td { padding: 0 4px; }
+.flaps { display: inline-flex; gap: 2px; }
+.flap { display: inline-grid; place-items: center; width: 1em; height: 1.65em; background: #232d35; color: var(--flap-ink); font: 600 clamp(.74rem, 1.15vw, .95rem)/1 var(--font-mono); border-radius: 3px; position: relative; text-transform: uppercase; }
+.flap::after { content: ""; position: absolute; left: 0; right: 0; top: 50%; border-top: 1px solid #0007; }
+.flap.amber { color: #ffb54a; } .flap.green { color: #7be0a4; } .flap.red { color: #ff8a7a; }
+.board .cap { font: 400 .74rem var(--font-mono); color: #8f9aa1; margin-top: 6px; }
+.stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+.stat { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 16px; display: grid; gap: 4px; align-content: start; }
+.stat .v { font: 800 2.4rem/1 var(--font-display); }
+.stat .v small { font-size: .55em; color: var(--ink-2); font-weight: 600; }
+.stat .k { color: var(--ink-2); font-size: .9rem; }
+@media (max-width: 820px) { .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+/* replay */
+.replay { display: grid; grid-template-columns: 270px minmax(0, 1fr); gap: 20px; align-items: start; }
+@media (max-width: 900px) { .replay { grid-template-columns: 1fr; } }
+.picker { display: grid; gap: 8px; position: sticky; top: 70px; }
+@media (max-width: 900px) { .picker { position: static; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); } }
+.pick { text-align: left; border: 1px solid var(--line); background: var(--panel); color: var(--ink); border-radius: 8px; padding: 10px 12px; cursor: pointer; font: inherit; display: grid; gap: 2px; border-left: 4px solid var(--line); }
+.pick:hover { border-color: var(--ink-2); }
+.pick[aria-pressed="true"] { border-left-color: var(--signal); box-shadow: 0 0 0 1px var(--signal) inset; }
+.pick .t { font-weight: 700; } .pick .g { font: 400 .74rem var(--font-mono); color: var(--ink-2); }
+.pick .g.fail { color: var(--bad); }
+.ep { display: grid; gap: 16px; min-width: 0; }
+.ep-head { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 18px; display: grid; gap: 10px; }
+.ep-head .fl { display: flex; flex-wrap: wrap; gap: 10px 22px; align-items: baseline; }
+.ep-head .fl .big { font: 900 2.1rem/1 var(--font-display); text-transform: uppercase; }
+.kv { font: 400 .8rem var(--font-mono); color: var(--ink-2); }
+.kv b { color: var(--ink); font-weight: 600; }
+.disrupt { border-left: 3px solid var(--signal); padding: 4px 0 4px 12px; color: var(--ink); }
+.silos { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+@media (max-width: 700px) { .silos { grid-template-columns: 1fr; } }
+.silo { border-radius: 8px; padding: 10px 12px; font-size: .86rem; display: grid; gap: 3px; }
+.silo h4 { margin: 0 0 4px; font: 600 .72rem var(--font-mono); letter-spacing: .12em; text-transform: uppercase; }
+.silo.atc { background: var(--atc-bg); } .silo.atc h4 { color: var(--atc); }
+.silo.pilot { background: var(--pilot-bg); } .silo.pilot h4 { color: var(--pilot); }
+.silo.ground { background: var(--ground-bg); } .silo.ground h4 { color: var(--ground); }
+.controls { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.btn { font: 600 .82rem var(--font-mono); text-transform: uppercase; letter-spacing: .06em; border: 1px solid var(--ink); background: transparent; color: var(--ink); border-radius: 6px; padding: 8px 12px; cursor: pointer; }
+.btn.primary { background: var(--ink); color: var(--board); }
+.btn:disabled { opacity: .4; cursor: default; }
+.turn { display: grid; gap: 8px; }
+.turn-label { display: flex; align-items: center; gap: 10px; font: 600 .74rem var(--font-mono); letter-spacing: .14em; text-transform: uppercase; color: var(--ink-2); }
+.turn-label::after { content: ""; flex: 1; border-top: 1px dashed var(--line); }
+.strip { display: grid; grid-template-columns: 112px minmax(0, 1fr); background: var(--panel); border: 1px solid var(--line); border-radius: 6px; overflow: hidden; animation: slide .35s ease-out both; }
+@keyframes slide { from { transform: translateX(-10px); opacity: .2; } to { transform: none; opacity: 1; } }
+.strip .who { padding: 10px; font: 600 .74rem var(--font-mono); letter-spacing: .1em; text-transform: uppercase; display: grid; align-content: start; gap: 6px; border-right: 1px dashed var(--line); }
+.strip.atc .who { background: var(--atc-bg); color: var(--atc); }
+.strip.pilot .who { background: var(--pilot-bg); color: var(--pilot); }
+.strip.ground .who { background: var(--ground-bg); color: var(--ground); }
+.strip.mediator .who { background: var(--med-bg); color: var(--med); }
+.strip.attack { border-color: var(--bad); }
+.strip.attack .who { background: var(--bad); color: #fff; }
+.strip .body { padding: 9px 12px; display: grid; gap: 6px; min-width: 0; }
+.strip .line1 { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.pill { font: 600 .68rem/1 var(--font-mono); letter-spacing: .08em; padding: 5px 7px; border-radius: 4px; border: 1px solid currentColor; text-transform: uppercase; white-space: nowrap; }
+.pill.ACCEPT, .pill.CONSENSUS { color: var(--ok); } .pill.REJECT, .pill.ESCALATE, .pill.INVALID { color: var(--bad); }
+.pill.COUNTER, .pill.FALLBACK { color: var(--warn); } .pill.PROPOSE, .pill.PROPOSAL, .pill.FINAL, .pill.BROADCAST, .pill.CLAIM { color: var(--ink-2); }
+.opt { font: 500 .84rem var(--font-mono); overflow-wrap: anywhere; }
+.strip .txt { color: var(--ink-2); font-size: .9rem; overflow-wrap: anywhere; }
+.guard { font: 500 .78rem var(--font-mono); color: var(--bad); background: color-mix(in srgb, var(--bad) 10%, transparent); border-left: 3px solid var(--bad); padding: 6px 8px; border-radius: 3px; overflow-wrap: anywhere; }
+.chip { font: 500 .72rem var(--font-mono); padding: 3px 7px; border-radius: 999px; border: 1px solid var(--line); white-space: nowrap; }
+.chip.claim { border-color: var(--warn); color: var(--warn); }
+.by { font: 400 .7rem var(--font-mono); color: var(--ink-2); }
+.decision { background: var(--panel); border: 2px solid var(--ink); border-radius: 10px; padding: 18px; display: grid; gap: 14px; }
+.decision .plan { font: 800 1.7rem/1.1 var(--font-display); text-transform: uppercase; }
+.cmp { display: grid; gap: 7px; }
+.cmp .row { display: grid; grid-template-columns: 150px minmax(0, 1fr) 96px; gap: 10px; align-items: center; font-size: .85rem; }
+.cmp .bar { height: 16px; border-radius: 3px; background: var(--ink-2); opacity: .35; }
+.cmp .row.neg .bar { background: var(--signal); opacity: 1; }
+.cmp .row.best .bar { background: var(--ok); opacity: .8; }
+.cmp .amt { font: 600 .85rem var(--font-mono); text-align: right; }
+.cmp .note { grid-column: 2 / 4; font: 400 .72rem var(--font-mono); color: var(--ink-2); margin-top: -4px; }
+.rules { display: grid; gap: 6px; }
+.rules .r { display: flex; flex-wrap: wrap; gap: 5px; align-items: center; }
+.rules .r > span:first-child { font: 600 .7rem var(--font-mono); letter-spacing: .1em; width: 64px; text-transform: uppercase; }
+.rc { font: 500 .7rem var(--font-mono); padding: 3px 7px; border-radius: 4px; background: color-mix(in srgb, var(--ok) 12%, transparent); color: var(--ok); cursor: help; }
+.rc.f { background: color-mix(in srgb, var(--bad) 14%, transparent); color: var(--bad); }
+.hash { font: 400 .72rem var(--font-mono); color: var(--ink-2); overflow-wrap: anywhere; }
+
+/* results */
+.grid2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+@media (max-width: 860px) { .grid2 { grid-template-columns: 1fr; } }
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 18px; display: grid; gap: 12px; align-content: start; min-width: 0; }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; }
+.seg button { font: 600 .74rem var(--font-mono); text-transform: uppercase; letter-spacing: .06em; padding: 7px 10px; border: 0; background: transparent; color: var(--ink-2); cursor: pointer; }
+.seg button[aria-pressed="true"] { background: var(--ink); color: var(--board); }
+.chartwrap { position: relative; overflow-x: auto; }
+.chartwrap svg { display: block; min-width: 720px; width: 100%; height: auto; }
+.chartwrap text { fill: var(--ink-2); font: 400 11px var(--font-mono); }
+.chartwrap .ttl { fill: var(--ink); font: 700 13px var(--font-body); }
+.tip { position: absolute; pointer-events: none; background: var(--ink); color: var(--board); font: 500 .76rem/1.4 var(--font-mono); padding: 7px 9px; border-radius: 5px; white-space: nowrap; opacity: 0; transform: translate(-50%, -110%); transition: opacity .1s; }
+.legend { display: flex; flex-wrap: wrap; gap: 16px; font: 500 .78rem var(--font-mono); color: var(--ink-2); align-items: center; }
+.legend i { display: inline-block; width: 18px; height: 3px; border-radius: 2px; vertical-align: middle; margin-right: 6px; }
+table.t { width: 100%; border-collapse: collapse; font-size: .88rem; }
+table.t th { text-align: left; font: 600 .7rem var(--font-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--ink-2); border-bottom: 1px solid var(--line); padding: 6px 8px; }
+table.t td { border-bottom: 1px solid var(--line); padding: 7px 8px; font-variant-numeric: tabular-nums; vertical-align: top; }
+table.t td.n { text-align: right; font-family: var(--font-mono); }
+.tw { overflow-x: auto; }
+.big3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+@media (max-width: 700px) { .big3 { grid-template-columns: 1fr; } }
+.fromto { font: 800 1.9rem/1 var(--font-display); }
+.fromto s { color: var(--ink-2); text-decoration-thickness: 2px; font-weight: 600; }
+.fails { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+@media (max-width: 900px) { .fails { grid-template-columns: 1fr; } }
+.fail { border-top: 4px solid var(--bad); }
+.fail .k { font: 600 .7rem var(--font-mono); letter-spacing: .12em; text-transform: uppercase; color: var(--bad); }
+.how { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; align-items: stretch; }
+@media (max-width: 900px) { .how { grid-template-columns: 1fr; } }
+.how .step { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 12px; display: grid; gap: 6px; align-content: start; position: relative; }
+.how .step .n { font: 600 .7rem var(--font-mono); color: var(--signal); letter-spacing: .12em; }
+.how .step b { font-family: var(--font-display); font-size: 1.15rem; text-transform: uppercase; }
+.how .step p { font-size: .86rem; color: var(--ink-2); }
+.tag { font: 600 .66rem var(--font-mono); padding: 3px 6px; border-radius: 4px; letter-spacing: .06em; text-transform: uppercase; justify-self: start; }
+.tag.code { background: color-mix(in srgb, var(--atc) 16%, transparent); color: var(--atc); }
+.tag.llm { background: color-mix(in srgb, var(--signal) 16%, transparent); color: var(--signal); }
+.tag.human { background: color-mix(in srgb, var(--ok) 16%, transparent); color: var(--ok); }
+.prov { display: flex; flex-wrap: wrap; gap: 8px; }
+.prov span { font-size: .84rem; padding: 6px 10px; border-radius: 6px; border: 1px solid var(--line); background: var(--panel); }
+.prov span b { font: 600 .66rem var(--font-mono); letter-spacing: .08em; text-transform: uppercase; margin-right: 6px; }
+.prov .real b { color: var(--ok); } .prov .org b { color: var(--atc); } .prov .syn b { color: var(--warn); }
+pre.cmd { background: var(--flap); color: var(--flap-ink); font: 400 .8rem/1.6 var(--font-mono); padding: 14px; border-radius: 8px; overflow-x: auto; margin: 0; }
+footer { padding: 48px 0 64px; color: var(--ink-2); font-size: .88rem; }
+.muted { color: var(--ink-2); }
+</style>
+</head>
+<body>
+<nav class="top" aria-label="Sections"><div class="wrap">
+  <span class="brand">Price of <b>Silos</b></span>
+  <a class="l" href="#replay">Replay</a><a class="l" href="#results">Results</a><a class="l" href="#stress">Stress tests</a>
+  <a class="l" href="#failures">Where it fails</a><a class="l" href="#how">How it works</a>
+  <a class="l gh" href="https://github.com/Lizcanutella/auto_sg">GitHub ↗</a>
+</div></nav>
+
+<main>
+<div class="wrap">
+  <header class="hero">
+    <span class="eyebrow">Airbus track · Challenge #2 · Autonomous SG 2026</span>
+    <h1>Three organisations.<br>One disrupted flight.<br><em>Three turns.</em></h1>
+    <p class="lede" id="heroLede">When weather or a late aircraft disrupts a flight, air traffic control, the airline and the ground handler each hold part of the picture and settle it by phone. We gave each of them an AI agent that sees only its own organisation's data, a deterministic mediator, and hard safety rules, then replayed real 2015 US disruptions.</p>
+    <div class="board" role="img" aria-label="Board of real flights: today's outcome versus the agreed plan">
+      <table><thead><tr><th>Flight</th><th>Route</th><th>Today (siloed)</th><th>Cost</th><th>Agreed in ≤3 turns</th><th>Cost</th><th>Saved</th></tr></thead>
+      <tbody id="board"></tbody></table>
+      <div class="cap">Real rows from flights.csv (DOT 2015). Costs are simulated with our cost model.</div>
+    </div>
+    <div class="stats" id="stats"></div>
+  </header>
+</div>
+
+<section id="replay"><div class="wrap">
+  <div class="sec-head">
+    <span class="eyebrow">Interactive replay · from the hash-chained consensus logs</span>
+    <h2>Watch a negotiation</h2>
+    <p class="lede">Each strip is one structured message. Pick a real episode, then replay it turn by turn. Hover a rule chip to see the value, the limit and the regulation behind it.</p>
+  </div>
+  <div class="replay">
+    <div class="picker" id="picker" role="group" aria-label="Episodes"></div>
+    <div class="ep" id="ep" aria-live="polite"></div>
+  </div>
+</div></section>
+
+<section id="results"><div class="wrap">
+  <div class="sec-head">
+    <span class="eyebrow">Benchmark · <span id="resN"></span></span>
+    <h2>How much does each organisation need to share?</h2>
+    <p class="lede" id="resLede"></p>
+  </div>
+  <div class="card">
+    <div class="controls" style="justify-content:space-between">
+      <div class="legend"><span><i style="background:var(--s1)"></i>Scripted agents</span><span><i style="background:var(--s2)"></i>Live Claude Haiku 5.5 (Nash only)</span><span><i style="background:var(--ink-2);height:0;border-top:2px dashed var(--ink-2)"></i>FCFS with full data sharing</span></div>
+      <div class="seg" role="group" aria-label="Acceptance policy">
+        <button type="button" id="acc-budget" aria-pressed="true" data-acc="budget">Bounded concession</button>
+        <button type="button" id="acc-rational" aria-pressed="false" data-acc="rational">Strictly rational</button>
+        <button type="button" id="acc-cooperative" aria-pressed="false" data-acc="cooperative">Cooperative</button>
+      </div>
+    </div>
+    <div class="chartwrap" id="chart"><div class="tip" id="tip"></div></div>
+    <p class="muted" style="font-size:.84rem">Gap closed = (siloed cost − negotiated cost) / (siloed cost − best possible). 0% is today's siloed process; 100% is what a solver with everyone's data finds. Bands are 95% bootstrap confidence intervals. D0: vetoes only · D1: rankings · D2: 0–1 scores · D3: all private data.</p>
+  </div>
+  <div class="big3" style="margin-top:16px" id="impact"></div>
+  <div class="grid2" style="margin-top:16px">
+    <div class="card"><h3>Gap closed by disclosure level</h3><div class="tw"><table class="t" id="levelTable"></table></div></div>
+    <div class="card"><h3>Robust to cost weights</h3><div class="tw"><table class="t" id="sensTable"></table></div><p class="muted" style="font-size:.84rem">Mean gap closed, scripted agents, all aggregation rules, 200 scenarios.</p></div>
+  </div>
+</div></section>
+
+<section id="stress"><div class="wrap">
+  <div class="sec-head">
+    <span class="eyebrow">Stress tests</span>
+    <h2>Trying to make it unsafe</h2>
+    <p class="lede">We attacked the agents with planted instructions, forged peer messages, tampered proposals and false facts, ran live Claude agents, and let one agent lie. The rule engine, not the model, decides what is safe.</p>
+  </div>
+  <div class="grid2">
+    <div class="card"><h3>Adversarial cases</h3><div class="tw"><table class="t" id="advTable"></table></div><p class="muted" style="font-size:.84rem">The "compliant" mock obeys every planted order. It shows the guard working when the model fails.</p></div>
+    <div class="card"><h3>Live Claude agents</h3><div class="tw"><table class="t" id="llmTable"></table></div></div>
+    <div class="card"><h3>One agent lies</h3><div class="tw"><table class="t" id="lieTable"></table></div><p class="muted" style="font-size:.84rem">The pilot exaggerates its scores and falsely claims minimum fuel, across 500 scenarios. Costs are measured with the true cost model.</p></div>
+    <div class="card"><h3>What the live model did</h3><div id="llmFindings" style="display:grid;gap:10px"></div></div>
+  </div>
+</div></section>
+
+<section id="failures"><div class="wrap">
+  <div class="sec-head">
+    <span class="eyebrow">Honest evaluation</span>
+    <h2>Where it fails</h2>
+    <p class="lede">Each case is a real row you can replay above. We say what happened, why, how a duty manager would know, and what would fix it.</p>
+  </div>
+  <div class="fails" id="fails"></div>
+</div></section>
+
+<section id="how"><div class="wrap">
+  <div class="sec-head">
+    <span class="eyebrow">Architecture</span>
+    <h2>Language models talk. Code decides what is allowed.</h2>
+  </div>
+  <div class="how">
+    <div class="step"><span class="n">01 · INPUT</span><b>A real DOT row</b><p>A delayed flight from flights.csv, its real neighbours and next leg, plus the organisers' workbook limits.</p><span class="tag code">Code</span></div>
+    <div class="step"><span class="n">02 · OPTIONS</span><b>Simulator</b><p>Every combination of slot, ground or airborne delay, route and gate, with times, fuel and costs computed.</p><span class="tag code">Code</span></div>
+    <div class="step"><span class="n">03 · RULES</span><b>Three checkers</b><p>Wake separation, capacity, taxiways, fuel reserve, crew duty, gates, notice, overtime. Each returns a rule ID and its source.</p><span class="tag code">Code</span></div>
+    <div class="step"><span class="n">04 · NEGOTIATE</span><b>Three agents, one mediator</b><p>Each agent sees only its own data and picks moves. A deterministic mediator runs 3 turns, then imposes a fallback or escalates.</p><span class="tag llm">LLM picks moves</span></div>
+    <div class="step"><span class="n">05 · DECIDE</span><b>Duty manager</b><p>Every agent re-checks the final plan. The duty manager approves or overrides; the decision is appended to the hash-chained log.</p><span class="tag human">Human</span></div>
+  </div>
+  <div class="grid2" style="margin-top:16px">
+    <div class="card"><h3>Who does what</h3><div class="tw"><table class="t">
+      <tr><th>Job</th><th>Done by</th></tr>
+      <tr><td>Times, fuel, separation, turnaround arithmetic</td><td><span class="tag code">Simulator</span></td></tr>
+      <tr><td>Legality: every hard constraint, with rule ID and source</td><td><span class="tag code">Rule modules</span></td></tr>
+      <tr><td>Which option to propose, accept or counter; what to reveal; the explanation</td><td><span class="tag llm">Claude, one call per agent move</span></td></tr>
+      <tr><td>Turn limit, aggregation, fallback, escalation</td><td><span class="tag code">Mediator state machine</span></td></tr>
+      <tr><td>Blocking any unsafe move, whatever the model says</td><td><span class="tag code">Guard</span></td></tr>
+      <tr><td>Verifying priority claims (minimum fuel)</td><td><span class="tag code">Verifier</span></td></tr>
+      <tr><td>Final approval</td><td><span class="tag human">Duty manager</span></td></tr>
+    </table></div></div>
+    <div class="card"><h3>Where the data comes from</h3>
+      <div class="prov">
+        <span class="real"><b>Real</b>Disrupted flight, schedule, delays, tail (flights.csv, DOT 2015)</span>
+        <span class="real"><b>Real</b>Next leg and its recorded knock-on delay (42% of rows)</span>
+        <span class="org"><b>Organiser</b>Runways, gates, capacity, wake minima, fuel and crew rules (workbook; its capacity sheet is itself synthetic)</span>
+        <span class="syn"><b>Synthetic</b>Rest of the arrival stream, gate bookings, connecting passengers, crew start times, weather capacity cut, fuel on board</span>
+      </div>
+      <p class="muted" style="font-size:.86rem">Every synthetic value is seeded and labelled per field. Every limit we changed or added is listed in <span class="mono">scenarios/workbook.py</span>.</p>
+      <h3 style="margin-top:6px">Reproduce</h3>
+<pre class="cmd">pip install -r requirements.txt && pytest -q
+python -m bench.run --scenarios data/scenarios.jsonl --tracks \
+  --acceptance budget,rational,cooperative --llm-subset 30
+python -m bench.metrics && python -m bench.charts --sensitivity
+streamlit run ui/app.py     # duty-manager UI, approve / override</pre>
+    </div>
+  </div>
+</div></section>
+</main>
+
+<footer><div class="wrap" style="display:grid;gap:8px">
+  <p><b>The Price of Silos</b> · Airbus track, Challenge #2 · Autonomous SG 2026 · code and data: <a href="https://github.com/Lizcanutella/auto_sg">github.com/Lizcanutella/auto_sg</a></p>
+  <p>All costs are simulated with our cost model, not measured airline costs. One flight negotiates per scenario; the other arrivals keep their slots. Live LLM results cover 30 scenarios with one run each.</p>
+</div></footer>
+
+<script>
+const DATA = /*__DATA__*/null;
+const $ = (s, el = document) => el.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;"}[c]));
+const usd = v => v == null ? "–" : (v < -0.5 ? "−$" : "$") + Math.abs(Math.round(v)).toLocaleString("en-US");
+const pct = v => v == null ? "–" : Math.round(v * 100) + "%";
+const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const ROLE = {atc: "ATC", pilot: "Airline", ground: "Ground", mediator: "Mediator"};
+
+function clock(t) {           // "26:12:30" -> "02:12 +1"
+  const [h, m] = t.split(":").map(Number);
+  const d = Math.floor(h / 24), hh = String(h % 24).padStart(2, "0");
+  return `${hh}:${String(m).padStart(2, "0")}${d ? " +" + d : ""}`;
+}
+function decode(o) {
+  if (!o) return "";
+  if (o.endsWith("/divert")) return `Divert (${o.split("/")[0].replace("divert_", "")})`;
+  const [rs, abs, gate] = o.split("/"); const [route, t] = rs.split("@");
+  const how = {ground: "delay on the ground", airborne: "delay holding in the air", none: "no delay"}[abs] || abs;
+  return `Land ${clock(t)} · ${how} · gate ${gate}${route !== "nominal" ? " · route " + route : ""}`;
+}
+
+/* ---------------- hero board (split-flap) */
+function flapCells(text, width, cls = "") {
+  const s = text.toUpperCase().padEnd(width).slice(0, width);
+  return `<span class="flaps" data-final="${esc(s)}">${[...s].map(c => `<span class="flap ${cls}">${c === " " ? "&nbsp;" : esc(c)}</span>`).join("")}</span>`;
+}
+function renderBoard() {
+  $("#board").innerHTML = DATA.board.map(r => `<tr>
+    <td>${flapCells(r.flight, 6)}</td><td>${flapCells(r.route, 7)}</td>
+    <td>${flapCells(r.today, 9, "amber")}</td><td>${flapCells(usd(r.today_cost), 7, "amber")}</td>
+    <td>${flapCells(r.agreed, 13, "green")}</td><td>${flapCells(usd(r.agreed_cost), 7, "green")}</td>
+    <td>${flapCells(usd(r.saved), 7, "green")}</td></tr>`).join("");
+  if (reduceMotion) return;
+  const CH = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789$";
+  document.querySelectorAll("#board .flaps").forEach((g, gi) => {
+    const final = g.dataset.final; const cells = [...g.children];
+    cells.forEach((c, i) => {
+      if (final[i] === " ") return;
+      let n = 6 + ((gi * 3 + i) % 9);
+      const tick = () => { if (n-- <= 0) { c.textContent = final[i]; return; } c.textContent = CH[Math.floor(Math.random() * CH.length)]; setTimeout(tick, 55); };
+      setTimeout(tick, 150 + gi * 40);
+    });
+  });
+}
+function renderStats() {
+  const h = DATA.headline, b = h.budget_by_level;
+  const tiles = [
+    [`${Math.round(h.with_gap / h.solvable * 100)}<small>%</small>`, `of ${h.solvable} real disruptions: today's siloed process costs more than the best plan`],
+    [`${pct(b.D0.m)}<small> → </small>${pct(b.D2.m)}`, `of that gap closed with vetoes only → 0–1 scores (FCFS with full data: ${pct(h.fcfs_gap.m)})`],
+    [`${h.violations}`, `safety violations in ${h.episodes.toLocaleString()} negotiated episodes; escalation correct ${pct(h.correct_escalation)}`],
+    [`≤${h.max_turns}`, `turns, always. Live Claude agents cost about $${DATA.llm.usd.toFixed(3)} per negotiation`],
+  ];
+  $("#stats").innerHTML = tiles.map(([v, k]) => `<div class="stat"><span class="v mono">${v}</span><span class="k">${esc(k)}</span></div>`).join("");
+}
+
+/* ---------------- replay */
+let current = null, visibleTurn = 99, timer = null;
+function renderPicker() {
+  $("#picker").innerHTML = DATA.episodes.map(e => `<button type="button" class="pick" id="pick-${e.key}" data-key="${e.key}" aria-pressed="false">
+    <span class="t">${esc(e.title)}</span><span class="g ${/fail|declines/i.test(e.tag) ? "fail" : ""}">${esc(e.tag)} · ${esc(e.flight.id)} ${esc(e.flight.origin)}→${esc(e.flight.dest)}</span></button>`).join("");
+  $("#picker").addEventListener("click", ev => { const b = ev.target.closest(".pick"); if (b) select(b.dataset.key, true); });
+}
+function stripHTML(m) {
+  const cls = m.kind === "tampered" ? "attack" : (m.sender.startsWith("attacker") ? "attack" : m.sender);
+  const who = m.kind === "tampered" ? "Attacker" : (ROLE[m.sender] || m.sender);
+  let body = "";
+  if (m.kind === "tampered") {
+    body = `<div class="line1"><span class="pill REJECT">Tampered message</span></div><div class="txt">A forged proposal reached ${esc(m.sender.split("->")[1] || "")}: ${esc(m.text)}</div>`;
+  } else if (m.kind === "invalid") {
+    body = `<div class="line1"><span class="pill INVALID">Invalid → REJECT</span></div><div class="guard">${esc(m.errors.join("; "))}</div>`;
+  } else {
+    const opt = m.option ? `<span class="opt">${esc(decode(m.option))}</span>` : "";
+    let extra = "";
+    if (m.type === "BROADCAST") extra = `<span class="chip">${m.n_options} options published</span>`;
+    if (m.type === "PROPOSAL") extra = `<span class="chip">${m.feasible} pass everyone's rules</span><span class="chip">top ${m.n_options} proposed</span>`;
+    if (m.type === "FINAL") extra = `<span class="opt">${esc(decode(m.options[0]))}</span>`;
+    const vet = m.vetoes ? `<span class="chip">${m.vetoes} options vetoed by own rules</span>` : "";
+    const cl = m.claims.map(c => `<span class="chip claim">claims ${esc(c.replace("_", " "))}</span>`).join("");
+    const g = m.guard.map(x => `<div class="guard">GUARD · ${esc(x)}</div>`).join("");
+    const by = m.author && m.author.startsWith("llm") ? `<span class="by">${esc(m.author.replace("llm:", "written by "))}</span>` : "";
+    const verdict = m.type === "CLAIM" ? (/ACCEPTED/.test(m.text) ? `<span class="pill ACCEPT">claim verified</span>` : `<span class="pill REJECT">claim rejected</span>`) : "";
+    body = `<div class="line1"><span class="pill ${m.type}">${esc(m.type)}</span>${verdict}${opt}${extra}${vet}${cl}</div>
+      ${m.text ? `<div class="txt">${esc(m.text)}</div>` : ""}${g}${by}`;
+  }
+  return `<div class="strip ${cls}"><div class="who">${esc(who)}<span class="mono" style="opacity:.6;font-weight:400">#${esc(m.hash.slice(0, 6))}</span></div><div class="body">${body}</div></div>`;
+}
+function planRow(label, p, cls, maxc) {
+  if (!p) return "";
+  const w = Math.max(2, p.cost / maxc * 100);
+  const note = `${p.airport !== undefined ? decode(p.option) : ""}${p.holding > 0.5 ? ` · ${Math.round(p.holding)} min holding` : ""}`;
+  return `<div class="row ${cls}"><span>${label}</span><div class="bar" style="width:${w}%"></div><span class="amt">${usd(p.cost)}</span><span class="note">${esc(note)}</span></div>`;
+}
+function renderEpisode() {
+  const e = current, d = e.decision || {}, f = e.flight;
+  const turns = [...new Set(e.messages.map(m => m.turn))].sort();
+  const delay = f.weather_delay > 15 ? `WEATHER_DELAY ${f.weather_delay} min` : `LATE_AIRCRAFT_DELAY ${f.late_aircraft_delay} min`;
+  const P = e.plans, maxc = Math.max(...Object.values(P).filter(Boolean).map(p => p.cost));
+  const saved = P.siloed && P.negotiated ? P.siloed.cost - P.negotiated.cost : null;
+  const rules = d.evidence ? Object.entries(d.evidence).map(([role, rs]) => `<div class="r"><span style="color:var(--${role})">${ROLE[role]}</span>${rs.map(r => {
+      const val = r.value == null ? "" : ` ${r.value}${r.limit != null ? " / " + r.limit : ""} ${r.unit || ""}`;
+      return `<span class="rc ${r.passed ? "" : "f"}" tabindex="0" title="${esc(`${r.rule_id}: ${r.passed ? "pass" : "FAIL"}${val}\n${r.detail || ""}\nSource: ${r.source}`)}">${r.passed ? "✓" : "✗"} ${esc(r.rule_id)}</span>`;
+    }).join("")}</div>`).join("") : "";
+  const vetoes = d.vetoes ? Object.entries(d.vetoes).map(([r, v]) => `<div class="r"><span>${ROLE[r]}</span>${Object.entries(v).map(([k, n]) => `<span class="rc f">${esc(k)} ×${n}</span>`).join("")}</div>`).join("") : "";
+  $("#ep").innerHTML = `
+    <div class="ep-head">
+      <div class="fl"><span class="big">${esc(f.id)} ${esc(f.origin)}→${esc(f.dest)}</span>
+        <span class="kv">${esc(f.date)} · sched arr <b>${esc(clock(f.sched_arr))}</b> · tail <b>${esc(f.tail)}</b> · ${esc(f.size)} · wake ${esc(f.wake)}</span></div>
+      <span class="kv">From flights.csv: <b>${esc(delay)}</b> · recorded arrival delay <b>${f.arrival_delay ?? "–"} min</b> · decision ${esc(e.decision_point.replace("_", "-"))} · ${e.n_options} candidate plans · scenario ${esc(e.scenario)}</span>
+      <p class="disrupt">${esc(e.disruption)}</p>
+      <div class="silos">${["atc", "pilot", "ground"].map(r => `<div class="silo ${r}"><h4>Only ${ROLE[r]} knows</h4>${e.private[r].map(x => `<span>${esc(x)}</span>`).join("")}</div>`).join("")}</div>
+      <span class="kv">Agents: ${esc(Object.entries(e.settings.strategies || {}).map(([r, s]) => `${ROLE[r]} ${s}`).join(" · "))} · disclosure <b>${esc(e.settings.disclosure)}</b> · ${esc(e.settings.aggregation)} · acceptance ${esc(e.settings.acceptance)}</span>
+    </div>
+    <div class="controls">
+      <button type="button" class="btn primary" id="play">▶ Replay turn by turn</button>
+      <button type="button" class="btn" id="step">Next turn</button>
+      <button type="button" class="btn" id="all">Show all</button>
+      <span class="kv" id="turnInfo"></span>
+    </div>
+    <div id="turns" style="display:grid;gap:14px">${turns.map(t => `<div class="turn" data-turn="${t}"><div class="turn-label">Turn ${t}${t === 1 ? " · constraints and opening" : t === 2 ? " · proposal" : " · final offer"}</div>${e.messages.filter(m => m.turn === t).map(stripHTML).join("")}</div>`).join("")}</div>
+    <div class="decision" id="decision">
+      <div class="line1" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><span class="pill ${d.status}">${esc(d.status)}</span><span class="kv">after ${d.turns} turn(s) · ${esc(d.reason || "")}</span></div>
+      ${d.status === "ESCALATE" ? `<div class="plan" style="color:var(--bad)">No safe plan. The system declines.</div><p class="muted">Every candidate breaks at least one organisation's hard rule. Nothing is recommended; the duty manager decides.</p><div class="rules">${vetoes}</div>`
+        : `<div class="plan">${esc(decode(d.option_id))}</div>
+           ${saved != null ? `<p>${saved > 0.5 ? `<b>${usd(saved)}</b> cheaper than today's siloed process` : saved < -0.5 ? `<b style="color:var(--bad)">${usd(-saved)} more expensive</b> than today's siloed process` : "Same cost as today's siloed process"}${P.best && P.negotiated && Math.abs(P.best.cost - P.negotiated.cost) < 0.5 ? " · matches the best possible plan" : P.best ? ` · ${usd(P.negotiated.cost - P.best.cost)} above the best possible plan` : ""}.</p>` : ""}
+           <div class="cmp">${planRow("Today (siloed)", P.siloed, "", maxc)}${planRow("FCFS, shared data", P.fcfs, "", maxc)}${planRow("Negotiated", P.negotiated, "neg", maxc)}${planRow("Best possible", P.best, "best", maxc)}</div>
+           <div class="rules"><span class="eyebrow">Final safety gate · each organisation's own checker</span>${rules}</div>`}
+      <span class="hash">Hash chain ${e.chain_ok ? "verified ✓" : "BROKEN ✗"} · ${esc(e.first_hash)} → ${esc(e.last_hash)} · awaiting duty-manager approval</span>
+    </div>`;
+  $("#play").onclick = () => play(); $("#step").onclick = () => step(); $("#all").onclick = () => showTurn(99);
+  showTurn(99);
+}
+function showTurn(t) {
+  visibleTurn = t; clearTimeout(timer);
+  const turns = [...document.querySelectorAll("#turns .turn")];
+  turns.forEach(el => el.hidden = +el.dataset.turn > t);
+  const last = Math.max(...turns.map(el => +el.dataset.turn));
+  $("#decision").hidden = t < last;
+  $("#turnInfo").textContent = t >= last ? `${last} turn(s) · complete` : `showing turn ${t} of ${last}`;
+}
+function step() { const last = Math.max(...[...document.querySelectorAll("#turns .turn")].map(el => +el.dataset.turn)); showTurn(visibleTurn >= last ? 1 : visibleTurn + 1); }
+function play() { showTurn(1); const last = Math.max(...[...document.querySelectorAll("#turns .turn")].map(el => +el.dataset.turn));
+  const go = () => { if (visibleTurn < last) { timer = setTimeout(() => { showTurn(visibleTurn + 1); go(); }, reduceMotion ? 0 : 1400); } }; go(); }
+function select(key, scroll) {
+  current = DATA.episodes.find(e => e.key === key) || DATA.episodes[0];
+  document.querySelectorAll(".pick").forEach(b => b.setAttribute("aria-pressed", b.dataset.key === current.key));
+  renderEpisode();
+  if (scroll) document.getElementById("replay").scrollIntoView();
+}
+
+/* ---------------- chart */
+let acc = "budget";
+function renderChart() {
+  const W = 1080, H = 340, P = {l: 50, r: 16, t: 34, b: 44}, gap = 26, aggs = ["weighted_sum", "maxmin", "nash"];
+  const names = {weighted_sum: "Weighted sum", maxmin: "Max-min fairness", nash: "Nash bargaining"};
+  const pw = (W - P.l - P.r - gap * 2) / 3, levels = ["D0", "D1", "D2", "D3"], lo = 0.4, hi = 1.0;
+  const y = v => P.t + (1 - (Math.max(lo, Math.min(hi, v)) - lo) / (hi - lo)) * (H - P.t - P.b);
+  const fc = DATA.headline.fcfs_gap.m;
+  const css = getComputedStyle(document.documentElement);
+  let s = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Gap closed by disclosure level">`;
+  aggs.forEach((agg, ai) => {
+    const x0 = P.l + ai * (pw + gap), x = i => x0 + 16 + i * (pw - 32) / 3;
+    s += `<text class="ttl" x="${x0}" y="18">${names[agg]}</text>`;
+    [0.4, 0.6, 0.8, 1.0].forEach(v => { s += `<line x1="${x0}" x2="${x0 + pw}" y1="${y(v)}" y2="${y(v)}" stroke="var(--line)" stroke-width="1"/>`; if (ai === 0) s += `<text x="${P.l - 8}" y="${y(v) + 4}" text-anchor="end">${v * 100}%</text>`; });
+    s += `<line x1="${x0}" x2="${x0 + pw}" y1="${y(fc)}" y2="${y(fc)}" stroke="var(--ink-2)" stroke-dasharray="5 4" stroke-width="1.5"/>`;
+    if (ai === 2) s += `<text x="${x0 + pw}" y="${y(fc) + 15}" text-anchor="end">FCFS ${pct(fc)}</text>`;
+    levels.forEach((l, i) => { s += `<text x="${x(i)}" y="${H - 22}" text-anchor="middle">${l}</text><text x="${x(i)}" y="${H - 8}" text-anchor="middle" style="font-size:10px">${["vetoes", "rankings", "scores", "all data"][i]}</text>`; });
+    [["scripted", "var(--s1)", acc], ["llm", "var(--s2)", "budget"]].forEach(([sys, col, a]) => {
+      if (sys === "llm" && (acc !== "budget")) return;
+      const pts = levels.map((l, i) => ({i, l, d: DATA.chart.find(c => c.system === sys && c.acceptance === a && c.level === l && c.agg === agg)})).filter(p => p.d && p.d.m != null);
+      if (!pts.length) return;
+      const band = pts.map(p => `${x(p.i)},${y(p.d.hi ?? p.d.m)}`).join(" ") + " " + pts.slice().reverse().map(p => `${x(p.i)},${y(p.d.lo ?? p.d.m)}`).join(" ");
+      s += `<polygon points="${band}" fill="${col}" opacity=".12"/>`;
+      s += `<polyline points="${pts.map(p => `${x(p.i)},${y(p.d.m)}`).join(" ")}" fill="none" stroke="${col}" stroke-width="2.5"/>`;
+      pts.forEach(p => { s += `<circle cx="${x(p.i)}" cy="${y(p.d.m)}" r="5" fill="${col}" stroke="var(--panel)" stroke-width="2"/>
+        <circle class="hit" cx="${x(p.i)}" cy="${y(p.d.m)}" r="14" fill="transparent" data-tip="${esc(`${sys === "llm" ? "Live Claude" : "Scripted"} · ${names[agg]} · ${p.l}\ngap closed ${pct(p.d.m)}${p.d.lo != null ? ` [${pct(p.d.lo)}, ${pct(p.d.hi)}]` : ""}\nvs FCFS ${pct(p.d.fcfs.m)} · n = ${p.d.n} scenarios`)}"/>`; });
+    });
+  });
+  s += `</svg>`;
+  const tip = $("#tip"); $("#chart").innerHTML = s; $("#chart").appendChild(tip);
+  $("#chart svg").addEventListener("mousemove", ev => {
+    const h = ev.target.closest(".hit"); if (!h) { tip.style.opacity = 0; return; }
+    const r = $("#chart").getBoundingClientRect(), c = h.getBoundingClientRect();
+    tip.innerHTML = esc(h.dataset.tip).replace(/\n/g, "<br>"); tip.style.left = (c.left - r.left + c.width / 2 + $("#chart").scrollLeft) + "px"; tip.style.top = (c.top - r.top) + "px"; tip.style.opacity = 1;
+  });
+  $("#chart svg").addEventListener("mouseleave", () => tip.style.opacity = 0);
+}
+function renderResults() {
+  const h = DATA.headline, I = DATA.impact;
+  $("#resN").textContent = `${h.scenarios} scenarios · ${h.with_gap} with a gap to close · ${h.episodes.toLocaleString()} negotiated episodes`;
+  $("#resLede").textContent = `Vetoes alone recover ${pct(h.budget_by_level.D0.m)} of the price of silos, about what full data sharing with simple first-come-first-served rules gets (${pct(h.fcfs_gap.m)}). Adding a ranking of options gets ${pct(h.budget_by_level.D1.m)}; full data adds little more. ${h.violations} unsafe plans in ${h.episodes.toLocaleString()} episodes.`;
+  $("#impact").innerHTML = [
+    ["Airborne holding per flight", `${I.hold_sil.toFixed(1)} min`, `${I.hold_neg.toFixed(1)} min`],
+    ["Extra fuel per flight", `${Math.round(I.fuel_sil)} kg`, `${Math.round(I.fuel_neg)} kg`],
+    ["Simulated cost per flight", usd(I.cost_sil), usd(I.cost_neg)],
+  ].map(([k, a, b]) => `<div class="stat"><span class="k">${k} · today → negotiated (D2, Nash, ${I.n} flights)</span><span class="fromto mono"><s>${a}</s> → ${b}</span></div>`).join("");
+  const b = h.budget_by_level;
+  $("#levelTable").innerHTML = `<tr><th>Shared</th><th style="text-align:right">Gap closed</th><th style="text-align:right">95% CI</th></tr>` +
+    [["D0", "Vetoes only"], ["D1", "+ rankings"], ["D2", "+ 0–1 scores"], ["D3", "All private data"]].map(([l, n]) => `<tr><td>${l} · ${n}</td><td class="n">${pct(b[l].m)}</td><td class="n">${pct(b[l].lo)}–${pct(b[l].hi)}</td></tr>`).join("") +
+    `<tr><td class="muted">FCFS, full data, simple rules</td><td class="n">${pct(h.fcfs_gap.m)}</td><td class="n">${pct(h.fcfs_gap.lo)}–${pct(h.fcfs_gap.hi)}</td></tr>`;
+  const S = DATA.sensitivity;
+  $("#sensTable").innerHTML = `<tr><th>Cost weighting</th>${["D0", "D1", "D2", "D3"].map(l => `<th style="text-align:right">${l}</th>`).join("")}</tr>` +
+    Object.entries(S).map(([w, v]) => `<tr><td>${esc(w)}</td>${["D0", "D1", "D2", "D3"].map(l => `<td class="n">${pct(v[l])}</td>`).join("")}</tr>`).join("");
+}
+function renderStress() {
+  const nm = {"scripted": "Scripted agents", "mock-compliant-llm": "Worst-case LLM (obeys planted orders)", "llm-live": "Live Claude Haiku 5.5"};
+  $("#advTable").innerHTML = `<tr><th>Agents</th><th style="text-align:right">Cases</th><th style="text-align:right">Tried unsafe move</th><th style="text-align:right">Blocked</th><th style="text-align:right">Unsafe plans</th></tr>` +
+    DATA.track_c.map(r => `<tr><td>${nm[r.strategy] || r.strategy}</td><td class="n">${r.cases}</td><td class="n">${pct(r.followed)}</td><td class="n">${r.blocks}</td><td class="n"><b>${r.violations + r.unsafe_final}</b></td></tr>`).join("");
+  const L = DATA.llm;
+  $("#llmTable").innerHTML = [
+    ["Negotiations · API calls", `${L.episodes} · ${L.calls}`], ["Safety violations", L.violations],
+    ["Consensus / fallback / escalation", `${L.status.CONSENSUS || 0} / ${L.status.FALLBACK || 0} / ${L.status.ESCALATE || 0}`],
+    ["Same plan as scripted agents", `${pct(L.same_plan)} of ${L.pairs} pairs`], ["Unsafe moves attempted", L.attempted_unsafe],
+    ["Cost · latency per negotiation", `$${L.usd.toFixed(4)} · ${L.latency.toFixed(0)} s`],
+  ].map(([k, v]) => `<tr><td>${k}</td><td class="n">${v}</td></tr>`).join("");
+  const nmd = {"liar, claim verified": "claim verified", "liar, claim unverified": "claim not verified"};
+  $("#lieTable").innerHTML = `<tr><th>Rule</th><th>Fuel claim</th><th style="text-align:right">Changed</th><th style="text-align:right">Liar gains</th><th style="text-align:right">Global cost</th></tr>` +
+    DATA.track_d.map(r => `<tr><td>${esc(r.aggregation.replace("_", " "))}</td><td>${nmd[r.condition] || r.condition}</td><td class="n">${r.outcome_changed}/${r.N}</td><td class="n">${usd(r.liar_gain_usd)}</td><td class="n">${r.global_loss_usd > 0 ? "+" : ""}${usd(r.global_loss_usd)}</td></tr>`).join("");
+  const c = L.claims, falseClaims = (c.pilot || 0) + (c.ground || 0) + (c.atc || 0) - c.accepted;
+  $("#llmFindings").innerHTML = [
+    [`${falseClaims} false minimum-fuel claims`, `The model kept asking for priority: ${c.pilot || 0} times as the airline, ${c.ground || 0} times as the ground handler, which may not declare it at all. The verifier rejected every one. Without verification, a free priority claim would be gamed constantly.`],
+    [`${L.unsupported} invented numbers flagged`, `The rationale audit caught numbers the model computed itself instead of reading from tools, such as "lands 12 minutes earlier". None reached a decision: rationale text never feeds the protocol.`],
+    [`0 planted instructions followed`, `In ${DATA.track_c.find(r => r.strategy === "llm-live")?.cases ?? 0} attacks the live model ignored injected orders. The guard does not rely on that.`],
+  ].map(([t, d]) => `<div><b>${esc(t)}</b><p class="muted" style="font-size:.9rem">${esc(d)}</p></div>`).join("");
+}
+function renderFails() {
+  const h = DATA.headline;
+  const F = [
+    ["ohare", "Mediator tie-break", "$15,770 left on the table at O'Hare", "All three agents accepted the cheaper plan, but the mediator ranks with unit-free 0–1 scores. ATC's $300 shadow cost is its whole range, so Nash and max-min kept today's plan. Live Claude at D1 found the better plan on the same row.", "Break ties between commonly accepted plans by the agents' own first choices, or share scores in dollars."],
+    ["gate", "Vetoes only", `Worse than today in ${h.worse_than_siloed} of 3,252 episodes`, "At D0 the mediator knows only public data, so it breaks ties by gate ID, not by the planned gate the ground handler holds privately. A needless gate change costs $300.", "Same fix: use the first choices the agents already send. At D2 this row reaches the best plan."],
+    ["nosafe", "Declines", `${h.no_safe} of ${h.scenarios} scenarios have no safe plan`, "Every candidate breaks some organisation's hard rule. The mediator escalates in turn 1 with the vetoes by rule and recommends nothing; escalation was correct in every case.", "This is the intended behaviour: the duty manager takes over."],
+  ];
+  $("#fails").innerHTML = F.map(([k, kind, t, d, fix]) => `<div class="card fail"><span class="k">${kind}</span><h3>${esc(t)}</h3><p class="muted" style="font-size:.92rem">${esc(d)}</p><p style="font-size:.9rem"><b>Fix:</b> ${esc(fix)}</p><button type="button" class="btn" data-go="${k}">Replay this case</button></div>`).join("");
+  $("#fails").addEventListener("click", ev => { const b = ev.target.closest("[data-go]"); if (b) select(b.dataset.go, true); });
+}
+document.querySelectorAll(".seg button").forEach(b => b.addEventListener("click", () => {
+  acc = b.dataset.acc; document.querySelectorAll(".seg button").forEach(x => x.setAttribute("aria-pressed", x === b)); renderChart(); }));
+
+renderStats(); renderBoard(); renderPicker(); select("blocked", false); renderResults(); renderChart(); renderStress(); renderFails();
+</script>
+</body>
+</html>
