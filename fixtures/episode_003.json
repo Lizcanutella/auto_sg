@@ -1,0 +1,493 @@
+{
+  "scenario_id": "episode_003",
+  "track": "B",
+  "seed": 3,
+  "public": {
+    "decision_point": "pre_departure",
+    "decision_time_min": 1000.0,
+    "focal": {
+      "flight_id": "DL1846-2015-07-14",
+      "airline": "DL",
+      "flight_number": 1846,
+      "tail_number": "N000FX",
+      "origin": "ORD",
+      "destination": "ATL",
+      "date": "2015-07-14",
+      "sched_departure_min": 1025.0,
+      "sched_arrival_min": 1135.0,
+      "taxi_out_min": 18.0,
+      "wake_category": "large",
+      "size_class": "narrowbody",
+      "recorded_arrival_delay_min": 62.0,
+      "recorded_weather_delay_min": 47.0,
+      "recorded_late_aircraft_delay_min": null
+    },
+    "routes": [
+      {
+        "route_id": "nominal",
+        "air_time_min": 82.0,
+        "trip_fuel_kg": 3300.0,
+        "through_weather": false,
+        "turbulence_min": 12.0,
+        "diversion_airport": null
+      },
+      {
+        "route_id": "reroute_west",
+        "air_time_min": 96.0,
+        "trip_fuel_kg": 3850.0,
+        "through_weather": false,
+        "turbulence_min": 2.0,
+        "diversion_airport": null
+      }
+    ],
+    "gates": [
+      {
+        "gate_id": "A12",
+        "zone": "A",
+        "size": "narrowbody",
+        "airline": "DL",
+        "taxi_in_min": 9.0
+      },
+      {
+        "gate_id": "A14",
+        "zone": "A",
+        "size": "narrowbody",
+        "airline": "DL",
+        "taxi_in_min": 9.0
+      },
+      {
+        "gate_id": "B7",
+        "zone": "B",
+        "size": "narrowbody",
+        "airline": "DL",
+        "taxi_in_min": 11.0
+      },
+      {
+        "gate_id": "C40",
+        "zone": "C",
+        "size": "regional",
+        "airline": "COMMON",
+        "taxi_in_min": 13.0
+      },
+      {
+        "gate_id": "D3",
+        "zone": "D",
+        "size": "narrowbody",
+        "airline": "COMMON",
+        "taxi_in_min": 14.0
+      },
+      {
+        "gate_id": "T5",
+        "zone": "T",
+        "size": "widebody",
+        "airline": "DL",
+        "taxi_in_min": 6.0
+      }
+    ],
+    "available_slots_min": [
+      1132.0,
+      1146.0,
+      1158.0,
+      1170.0,
+      1178.0,
+      1192.0,
+      1206.0,
+      1224.0
+    ],
+    "rbs_slot_min": 1158.0,
+    "weather_summary": "Thunderstorms at ATL 18:30-20:00 local. Arrival rate cut from 40 to 30 per hour; Ground Delay Program in effect. Moderate turbulence on the direct route over Tennessee."
+  },
+  "atc": {
+    "base_aar_per_hour": 40.0,
+    "reduced_aar_per_hour": 30.0,
+    "arrival_sequence": [
+      {
+        "flight_id": "ARR1100",
+        "slot_min": 1100.0,
+        "wake_category": "large"
+      },
+      {
+        "flight_id": "ARR1102",
+        "slot_min": 1102.0,
+        "wake_category": "large"
+      },
+      {
+        "flight_id": "ARR1104",
+        "slot_min": 1104.0,
+        "wake_category": "large"
+      },
+      {
+        "flight_id": "ARR1106",
+        "slot_min": 1106.0,
+        "wake_category": "large"
+      },
+      {
+        "flight_id": "ARR1108",
+        "slot_min": 1108.0,
+        "wake_category": "large"
+      },
+      {
+        "flight_id": "ARR1110",
+        "slot_min": 1110.0,
+        "wake_category": "heavy"
+      },
+      {
+        "flight_id": "ARR1112",
+        "slot_min": 1112.0,
+        "wake_category": "large"
+      },
+      {
+        "flight_id": "ARR1114",
+        "slot_min": 1114.0,
+        "wake_category": "large"
+      },
+      {
+        "flight_id": "ARR1116",
+        "slot_min": 1116.0,
+        "wake_category": "large"
+      },
+      {
+        "flight_id": "ARR1118",
+        "slot_min": 1118.0,
+        "wake_category": "large"
+      },
+      {
+        "flight_id": "ARR1120",
+        "slot_min": 1120.0,
+        "wake_category": "large"
+      },
+      {
+        "flight_id": "ARR1122",
+        "slot_min": 1122.0,
+        "wake_category": "large"
+      },
+      {
+        "flight_id": "ARR1124",
+        "slot_min": 1124.0,
+        "wake_category": "large"
+      },
+      {
+        "flight_id": "ARR1126",
+        "slot_min": 1126.0,
+        "wake_category": "large"
+      },
+      {
+        "flight_id": "ARR1128",
+        "slot_min": 1128.0,
+        "wake_category": "large"
+      },
+      {
+        "flight_id": "ARR1130",
+        "slot_min": 1130.0,
+        "wake_category": "heavy"
+      },
+      {
+        "flight_id": "ARR1134",
+        "slot_min": 1134.0,
+        "wake_category": "large"
+      },
+      {
+        "flight_id": "ARR1136",
+        "slot_min": 1136.0,
+        "wake_category": "large"
+      },
+      {
+        "flight_id": "ARR1138",
+        "slot_min": 1138.0,
+        "wake_category": "large"
+      },
+      {
+        "flight_id": "ARR1140",
+        "slot_min": 1140.0,
+        "wake_category": "large"
+      },
+      {
+        "flight_id": "ARR1142",
+        "slot_min": 1142.0,
+        "wake_category": "large"
+      },
+      {
+        "flight_id": "ARR1144",
+        "slot_min": 1144.0,
+        "wake_category": "large"
+      },
+      {
+        "flight_id": "ARR1148",
+        "slot_min": 1148.0,
+        "wake_category": "large"
+      },
+      {
+        "flight_id": "ARR1150",
+        "slot_min": 1150.0,
+        "wake_category": "b757"
+      },
+      {
+        "flight_id": "ARR1152",
+        "slot_min": 1152.0,
+        "wake_category": "large"
+      },
+      {
+        "flight_id": "ARR1154",
+        "slot_min": 1154.0,
+        "wake_category": "large"
+      },
+      {
+        "flight_id": "ARR1156",
+        "slot_min": 1156.0,
+        "wake_category": "b757"
+      },
+      {
+        "flight_id": "ARR1160",
+        "slot_min": 1160.0,
+        "wake_category": "large"
+      },
+      {
+        "flight_id": "ARR1162",
+        "slot_min": 1162.0,
+        "wake_category": "large"
+      },
+      {
+        "flight_id": "ARR1164",
+        "slot_min": 1164.0,
+        "wake_category": "large"
+      },
+      {
+        "flight_id": "ARR1166",
+        "slot_min": 1166.0,
+        "wake_category": "large"
+      },
+      {
+        "flight_id": "ARR1168",
+        "slot_min": 1168.0,
+        "wake_category": "large"
+      },
+      {
+        "flight_id": "ARR1172",
+        "slot_min": 1172.0,
+        "wake_category": "large"
+      },
+      {
+        "flight_id": "ARR1174",
+        "slot_min": 1174.0,
+        "wake_category": "large"
+      },
+      {
+        "flight_id": "ARR1176",
+        "slot_min": 1176.0,
+        "wake_category": "heavy"
+      },
+      {
+        "flight_id": "ARR1180",
+        "slot_min": 1180.0,
+        "wake_category": "large"
+      },
+      {
+        "flight_id": "ARR1182",
+        "slot_min": 1182.0,
+        "wake_category": "large"
+      },
+      {
+        "flight_id": "ARR1184",
+        "slot_min": 1184.0,
+        "wake_category": "large"
+      },
+      {
+        "flight_id": "ARR1186",
+        "slot_min": 1186.0,
+        "wake_category": "heavy"
+      },
+      {
+        "flight_id": "ARR1188",
+        "slot_min": 1188.0,
+        "wake_category": "large"
+      },
+      {
+        "flight_id": "ARR1190",
+        "slot_min": 1190.0,
+        "wake_category": "large"
+      },
+      {
+        "flight_id": "ARR1194",
+        "slot_min": 1194.0,
+        "wake_category": "large"
+      },
+      {
+        "flight_id": "ARR1196",
+        "slot_min": 1196.0,
+        "wake_category": "large"
+      },
+      {
+        "flight_id": "ARR1198",
+        "slot_min": 1198.0,
+        "wake_category": "large"
+      },
+      {
+        "flight_id": "ARR1200",
+        "slot_min": 1200.0,
+        "wake_category": "small"
+      },
+      {
+        "flight_id": "ARR1202",
+        "slot_min": 1202.0,
+        "wake_category": "large"
+      },
+      {
+        "flight_id": "ARR1204",
+        "slot_min": 1204.0,
+        "wake_category": "large"
+      },
+      {
+        "flight_id": "ARR1208",
+        "slot_min": 1208.0,
+        "wake_category": "large"
+      },
+      {
+        "flight_id": "ARR1210",
+        "slot_min": 1210.0,
+        "wake_category": "large"
+      },
+      {
+        "flight_id": "ARR1212",
+        "slot_min": 1212.0,
+        "wake_category": "large"
+      },
+      {
+        "flight_id": "ARR1214",
+        "slot_min": 1214.0,
+        "wake_category": "large"
+      },
+      {
+        "flight_id": "ARR1216",
+        "slot_min": 1216.0,
+        "wake_category": "b757"
+      },
+      {
+        "flight_id": "ARR1218",
+        "slot_min": 1218.0,
+        "wake_category": "large"
+      },
+      {
+        "flight_id": "ARR1220",
+        "slot_min": 1220.0,
+        "wake_category": "large"
+      },
+      {
+        "flight_id": "ARR1222",
+        "slot_min": 1222.0,
+        "wake_category": "large"
+      },
+      {
+        "flight_id": "ARR1226",
+        "slot_min": 1226.0,
+        "wake_category": "large"
+      },
+      {
+        "flight_id": "ARR1228",
+        "slot_min": 1228.0,
+        "wake_category": "large"
+      },
+      {
+        "flight_id": "ARR1230",
+        "slot_min": 1230.0,
+        "wake_category": "large"
+      },
+      {
+        "flight_id": "ARR1232",
+        "slot_min": 1232.0,
+        "wake_category": "large"
+      },
+      {
+        "flight_id": "ARR1234",
+        "slot_min": 1234.0,
+        "wake_category": "large"
+      },
+      {
+        "flight_id": "ARR1236",
+        "slot_min": 1236.0,
+        "wake_category": "large"
+      },
+      {
+        "flight_id": "ARR1238",
+        "slot_min": 1238.0,
+        "wake_category": "large"
+      },
+      {
+        "flight_id": "ARR1240",
+        "slot_min": 1240.0,
+        "wake_category": "large"
+      }
+    ],
+    "closed_taxiway_zones": [
+      "T"
+    ],
+    "max_holding_min": 20.0
+  },
+  "pilot": {
+    "fuel_on_board_kg": 6640.0,
+    "holding_burn_kg_per_min": 38.0,
+    "alternate_airport": "CHA",
+    "alternate_fuel_kg": 1300.0,
+    "final_reserve_min": 30.0,
+    "crew_duty_end_min": 1140.0,
+    "connections": [
+      {
+        "flight_id": "DL412-JFK",
+        "departure_min": 1170.0,
+        "pax": 9,
+        "min_connect_min": 35.0
+      },
+      {
+        "flight_id": "DL1500-MIA",
+        "departure_min": 1190.0,
+        "pax": 14,
+        "min_connect_min": 35.0
+      },
+      {
+        "flight_id": "DL880-LAX",
+        "departure_min": 1215.0,
+        "pax": 22,
+        "min_connect_min": 40.0
+      }
+    ]
+  },
+  "ground": {
+    "planned_gate_id": "A12",
+    "gate_bookings": [
+      {
+        "gate_id": "A12",
+        "flight_id": "DL2001",
+        "start_min": 1090.0,
+        "end_min": 1185.0
+      },
+      {
+        "gate_id": "A14",
+        "flight_id": "DL733",
+        "start_min": 1150.0,
+        "end_min": 1215.0
+      },
+      {
+        "gate_id": "B7",
+        "flight_id": "DL95",
+        "start_min": 1205.0,
+        "end_min": 1260.0
+      },
+      {
+        "gate_id": "D3",
+        "flight_id": "F91201",
+        "start_min": 1220.0,
+        "end_min": 1260.0
+      }
+    ],
+    "min_turnaround_min": 40.0,
+    "next_leg": {
+      "flight_id": "DL2210-MCO",
+      "sched_departure_min": 1180.0
+    },
+    "ramp_crew_size": 6,
+    "crew_shift_end_min": 1200.0,
+    "max_overtime_min": 45.0
+  },
+  "provenance": {
+    "*": "synthetic"
+  }
+}
