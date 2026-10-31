@@ -56,6 +56,8 @@ def summary(df: pd.DataFrame) -> pd.DataFrame:
             N=n,
             n_gap=int(g.gap_closed.notna().sum()),
             gap_closed=boot_ci(g.gap_closed),
+            n_gap_fcfs=int(g.gap_closed_fcfs.notna().sum()) if "gap_closed_fcfs" in g else 0,
+            gap_closed_fcfs=boot_ci(g.gap_closed_fcfs) if "gap_closed_fcfs" in g else (math.nan,) * 3,
             violations=int(g.violations.sum()),
             consensus=boot_ci((g.status == "CONSENSUS").astype(float)),
             fallback=boot_ci((g.status == "FALLBACK").astype(float)),
@@ -131,31 +133,36 @@ def to_markdown(results: Path) -> str:
     tracks = df.groupby("track").scenario_id.nunique().to_dict()
     s = summary(df)
     lines = [f"# Benchmark results\n", f"Scenarios: **{n_scen}** (by track: {tracks}). "
-             f"Gap closed = (FCFS − system) / (FCFS − best possible), only where FCFS ≠ best "
-             f"(n_gap). Brackets = 95% bootstrap CI.\n"]
-    base = df[df.system.isin(["fcfs", "best_possible"])]
+             f"**Gap closed** = (siloed − system) / (siloed − best possible): 0% = today's siloed process, "
+             f"100% = best possible; only where siloed ≠ best (n_gap). **vs FCFS** = same against coordinated "
+             f"simple rules (FCFS/RBS), i.e. what negotiation adds beyond sharing data. Brackets = 95% bootstrap CI.\n"]
+    base = df[df.system.isin(["siloed", "fcfs", "best_possible"])]
     lines.append("## Baselines\n")
     for name, g in base.groupby("system"):
         lines.append(f"- **{name}**: plan {int((g.status == 'CONSENSUS').sum())}, escalate "
                      f"{int((g.status == 'ESCALATE').sum())}, mean global cost "
                      f"${g.global_cost_usd.mean():,.0f}")
+    fc = base[base.system == "fcfs"]
+    if "gap_closed" in fc and fc.gap_closed.notna().any():
+        lines.append(f"- FCFS (sharing data, simple rules) closes {fmt_ci(boot_ci(fc.gap_closed), pct=True)} of "
+                     f"the siloed gap (n={int(fc.gap_closed.notna().sum())})")
     lines.append("\n## Negotiation\n")
-    lines.append("| system | level | aggregation | acceptance | N | n_gap | gap closed | violations | consensus | "
-                 "fallback | escalate | ≤2 turns | worst-off regret (USD) | guard blocks |")
-    lines.append("|" + "---|" * 14)
+    lines.append("| system | level | aggregation | acceptance | N | n_gap | gap closed | vs FCFS (n) | violations | "
+                 "consensus | fallback | escalate | ≤2 turns | worst-off regret (USD) | guard blocks |")
+    lines.append("|" + "---|" * 15)
     for _, r in s.sort_values(GROUP).iterrows():
         lines.append(f"| {r.system} | {r.disclosure} | {r.aggregation} | {r.acceptance} | {r.N} | {r.n_gap} | "
-                     f"{fmt_ci(r.gap_closed, pct=True)} | {r.violations} | {fmt_ci(r.consensus, pct=True)} | "
+                     f"{fmt_ci(r.gap_closed, pct=True)} | {fmt_ci(r.gap_closed_fcfs, pct=True)} ({r.n_gap_fcfs}) | {r.violations} | {fmt_ci(r.consensus, pct=True)} | "
                      f"{fmt_ci(r.fallback, pct=True)} | {fmt_ci(r.escalate, pct=True)} | "
                      f"{fmt_ci(r.within_2_turns, pct=True)} | {fmt_ci(r.worst_regret, money=True)} | {r.guard_blocks} |")
     llm = s[s.system == "llm"]
     if len(llm):
         lines.append("\n## LLM behaviour\n")
-        lines.append("| level | aggregation | N | fallback rate (per move) | unsupported numbers (per move) | "
+        lines.append("| level | aggregation | acceptance | N | fallback rate (per move) | unsupported numbers (per move) | "
                      "attempted unsafe | latency/episode (s) | tokens/episode | USD/episode |")
-        lines.append("|" + "---|" * 9)
+        lines.append("|" + "---|" * 10)
         for _, r in llm.iterrows():
-            lines.append(f"| {r.disclosure} | {r.aggregation} | {r.N} | {r.llm_fallback_rate:.0%} | "
+            lines.append(f"| {r.disclosure} | {r.aggregation} | {r.acceptance} | {r.N} | {r.llm_fallback_rate:.0%} | "
                          f"{r.llm_unsupported_numbers_rate:.0%} | {r.llm_attempted_unsafe} | "
                          f"{fmt_ci(r.llm_latency_s)} | {r.llm_tokens:,.0f} | ${r.llm_usd_per_episode:.4f} |")
         oc = over_concession(df)

@@ -42,12 +42,12 @@ class Veto(_Msg):
 class Preferences(_Msg):
     """What an agent discloses about its private preferences, by disclosure level.
 
-    D0: nothing (vetoes only).  D1: ranking of its non-vetoed options, best first.
+    D0: nothing (vetoes only).  D1: dense rank per non-vetoed option (0 = best; equal cost = equal rank).
     D2: normalised regret per non-vetoed option, 0 = its best, 1 = its worst (unit-free).
     D3: its raw private data block, so the mediator can compute everything itself.
     """
     level: Disclosure
-    ranking: list[str] | None = None
+    ranks: dict[str, int] | None = None
     regret: dict[str, float] | None = None
     private_data: dict | None = None
 
@@ -132,6 +132,6 @@ def validate_agent_message(msg: AgentMessage, *, scenario_id: str, turn: int, se
             bad = [o for o, r in p.regret.items() if not (0.0 <= r <= 1.0) or o not in option_ids]
             if bad:
                 errs.append(f"regret must be in [0,1] for known options: {bad[:3]}")
-        if p.ranking is not None and any(o not in option_ids for o in p.ranking):
-            errs.append("ranking contains unknown option ids")
+        if p.ranks is not None and any(o not in option_ids or r < 0 for o, r in p.ranks.items()):
+            errs.append("ranks must be non-negative for known options")
     return errs

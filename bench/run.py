@@ -1,6 +1,7 @@
 """Benchmark runner (D-1): systems x disclosure levels x aggregation rules -> results/results.parquet.
 
   python -m bench.run                                     # fixtures, scripted, all levels/rules
+  Gap closed is measured against today's siloed process (headline) and against FCFS/RBS.
   python -m bench.run --scenarios data/scenarios.jsonl    # workstream A's scenarios
   python -m bench.run --llm-subset 30 --llm-levels D0,D2  # + LLM agents on a fixed subset
   python -m bench.run --tracks                             # + adversarial (C) and misreporting (D) tracks
@@ -22,7 +23,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from baselines import best_possible, fcfs_rbs
+from baselines import best_possible, fcfs_rbs, siloed
 from contracts import ROLES, Scenario
 from protocol import run_episode, score_result
 from sim import evaluate, evaluate_all, generate_options, option_by_id
@@ -46,9 +47,9 @@ def baseline_rows(s: Scenario, p: CostParams) -> tuple[list[dict], dict]:
     """FCFS and best-possible rows + the reference numbers every negotiated row is compared with."""
     ev = evaluate_all(s, p)
     feas = [e for e in ev if e.feasible]
-    ref = {"fcfs": None, "best": None, "role_min": {}}
+    ref = {"siloed": None, "fcfs": None, "best": None, "role_min": {}}
     rows = []
-    for name, mod in (("fcfs", fcfs_rbs), ("best_possible", best_possible)):
+    for name, mod in (("siloed", siloed), ("fcfs", fcfs_rbs), ("best_possible", best_possible)):
         t0 = time.time()
         r = mod.plan(s, p)
         row = _base_row(s, name, "-", "-", "-")
@@ -60,9 +61,11 @@ def baseline_rows(s: Scenario, p: CostParams) -> tuple[list[dict], dict]:
             for role, c in r.chosen.costs.items():
                 row[f"cost_{role}"] = c.total_usd
         rows.append(row)
-        ref["fcfs" if name == "fcfs" else "best"] = row
+        ref["best" if name == "best_possible" else name] = row
     for role in ROLES:
         ref["role_min"][role] = min((e.costs[role].total_usd for e in feas), default=None)
+    for row in rows:
+        _add_gap(row, ref)
     return rows, ref
 
 
@@ -120,23 +123,26 @@ def negotiated_row(s: Scenario, system: str, level: str, agg: str, acceptance: s
 
 
 def _add_gap(row: dict, ref: dict):
-    f, b = ref["fcfs"], ref["best"]
-    row["fcfs_cost_usd"] = f["global_cost_usd"] if f else math.nan
+    """gap_closed: vs today's siloed process (headline); gap_closed_fcfs: vs coordinated simple rules."""
+    b = ref["best"]
     row["best_cost_usd"] = b["global_cost_usd"] if b else math.nan
-    denom = row["fcfs_cost_usd"] - row["best_cost_usd"]
-    if row["status"] == "ESCALATE" or not denom or math.isnan(denom) or denom < 1e-6 or math.isnan(row["global_cost_usd"]):
-        row["gap_closed"] = math.nan
-    else:
-        row["gap_closed"] = (row["fcfs_cost_usd"] - row["global_cost_usd"]) / denom
+    for base, col in (("siloed", "gap_closed"), ("fcfs", "gap_closed_fcfs")):
+        r = ref[base]
+        row[f"{base}_cost_usd"] = r["global_cost_usd"] if r else math.nan
+        denom = row[f"{base}_cost_usd"] - row["best_cost_usd"]
+        if (row["status"] == "ESCALATE" or math.isnan(denom) or denom < 1e-6
+                or math.isnan(row["global_cost_usd"])):
+            row[col] = math.nan
+        else:
+            row[col] = (row[f"{base}_cost_usd"] - row["global_cost_usd"]) / denom
     row["correct_escalation"] = (row["status"] == "ESCALATE") == (b is not None and b["status"] == "ESCALATE")
 
 
 def _job(args):
     """One unit of work (runs in a worker process for scripted agents)."""
-    s_json, system, level, agg, acceptance, p_json, log_dir, agent_kwargs = args
+    s_json, system, level, agg, acceptance, p_json, log_dir, agent_kwargs, ref = args
     s = Scenario.model_validate_json(s_json)
     p = CostParams.model_validate_json(p_json)
-    _, ref = baseline_rows(s, p)
     return negotiated_row(s, system, level, agg, acceptance, ref, p, Path(log_dir), agent_kwargs)
 
 
@@ -150,18 +156,18 @@ def run(scenarios: list[Scenario], *, levels=LEVELS, aggs=AGGS, acceptance=("bud
     rows, jobs, llm_jobs = [], [], []
     # fixed LLM subset: the first N scenarios by a stable hash of their id (independent of file order)
     llm_ids = set(sorted((s.scenario_id for s in scenarios), key=lambda i: hashlib.md5(i.encode()).hexdigest())[:llm_subset])
+    refs = {}
     for s in scenarios:
-        base, _ = baseline_rows(s, params)
+        base, refs[s.scenario_id] = baseline_rows(s, params)
         rows += base
-        sh = _scenario_hash(s)
         for acc in acceptance:
             for lvl in levels:
                 for agg in aggs:
                     jobs.append((s, "scripted", lvl, agg, acc))
-            if s.scenario_id in llm_ids:
-                for lvl in llm_levels:
-                    for agg in llm_aggs:
-                        llm_jobs.append((s, "llm", lvl, agg, acc))
+        if s.scenario_id in llm_ids:            # LLM agents: default acceptance policy only
+            for lvl in llm_levels:
+                for agg in llm_aggs:
+                    llm_jobs.append((s, "llm", lvl, agg, acceptance[0]))
     todo, todo_llm = [], []
     for kind, lst, dest in (("s", jobs, todo), ("l", llm_jobs, todo_llm)):
         for s, system, lvl, agg, acc in lst:
@@ -171,7 +177,8 @@ def run(scenarios: list[Scenario], *, levels=LEVELS, aggs=AGGS, acceptance=("bud
             if use_cache and f.exists():
                 rows.append(json.loads(f.read_text()))
             else:
-                dest.append((f, (s.model_dump_json(), system, lvl, agg, acc, p_json, str(log_dir), None)))
+                dest.append((f, (s.model_dump_json(), system, lvl, agg, acc, p_json, str(log_dir), None,
+                                 refs[s.scenario_id])))
 
     def save(f, row):
         row = {k: (None if isinstance(v, float) and math.isnan(v) else v) for k, v in row.items()}
@@ -181,7 +188,7 @@ def run(scenarios: list[Scenario], *, levels=LEVELS, aggs=AGGS, acceptance=("bud
     t0 = time.time()
     if todo:
         with ProcessPoolExecutor(max_workers=workers or max(1, (os.cpu_count() or 2) - 1)) as ex:
-            for (f, _), row in zip(todo, ex.map(_job, [a for _, a in todo], chunksize=8)):
+            for (f, _), row in zip(todo, ex.map(_job, [a for _, a in todo], chunksize=32)):
                 save(f, row)
     if todo_llm:
         with ThreadPoolExecutor(max_workers=llm_workers) as ex:
@@ -206,6 +213,8 @@ def main():
     ap.add_argument("--llm-aggs", default="nash")
     ap.add_argument("--tracks", action="store_true", help="also run adversarial (C) and misreporting (D) tracks")
     ap.add_argument("--tracks-live", action="store_true", help="include the live LLM in the adversarial track")
+    ap.add_argument("--tracks-limit", type=int, default=20,
+                    help="adversarial track on this many scenarios (stable subset); misreporting runs on all")
     ap.add_argument("--out", default=str(OUT))
     ap.add_argument("--no-cache", action="store_true")
     ap.add_argument("--workers", type=int)
@@ -224,7 +233,8 @@ def main():
                       "mock-compliant-llm": lambda: ("llm", {"client": FakeClient(compliant)})}
         if a.tracks_live:
             strategies["llm-live"] = lambda: ("llm", {})
-        pd.DataFrame(adversarial.run(scenarios, strategies)).to_parquet(out / "track_c.parquet")
+        subset = sorted(scenarios, key=lambda s: hashlib.md5(s.scenario_id.encode()).hexdigest())[:a.tracks_limit]
+        pd.DataFrame(adversarial.run(subset, strategies)).to_parquet(out / "track_c.parquet")
         rows = []
         for agg in AGGS:
             for r in misreport.run(scenarios, aggregation=agg):
