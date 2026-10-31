@@ -196,3 +196,18 @@ def test_min_fuel_claims_verified_against_the_pilot_data():
     assert by[("episode_001", "liar, claim unverified")][0]["accepted"]
     # episode 002: airborne with 5 min margin -> the claim is TRUE and is accepted
     assert by[("episode_002", "liar, claim verified")][0]["accepted"]
+
+
+class _GroundClaimsFuel(ScriptedAgent):
+    def decide_turn1(self):
+        d = super().decide_turn1()
+        d.claims = ["min_fuel"]
+        return d
+
+
+def test_only_the_pilot_can_declare_minimum_fuel():
+    s = load("episode_002")                       # genuine minimum fuel for the pilot
+    agents = build_agents(s)
+    agents["ground"] = _GroundClaimsFuel(s.view("ground"), "ground")
+    r = Mediator(s, agents).run()
+    assert [c["accepted"] for c in r.claims if c["role"] == "ground"] == [False]

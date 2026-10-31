@@ -234,7 +234,10 @@ class Mediator:
 
         for role, m in r1.items():
             for c in m.claims:
-                ok, detail = (self.verifier.verify(c, F) if self.verifier else (True, "not verified"))
+                if role != "pilot":   # only the flight crew can declare minimum fuel
+                    ok, detail = False, f"{role} cannot declare minimum fuel for the flight"
+                else:
+                    ok, detail = (self.verifier.verify(c, F) if self.verifier else (True, "not verified"))
                 self.claims.append({"role": role, "kind": c.kind, "accepted": ok, "detail": detail,
                                     "verified": self.verifier is not None})
                 if ok:
