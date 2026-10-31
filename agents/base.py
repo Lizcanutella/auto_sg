@@ -199,6 +199,9 @@ class Agent:
         counter_kind = d.counter_kind if typ == "COUNTER" else None
         if typ == "COUNTER" and counter_kind not in ("concede", "reveal", "variant"):
             counter_kind = "variant"
+        rationale = d.rationale
+        if typ != d.type:     # the guard replaced the move: say so, keep the original text for the audit trail
+            rationale = f"[GUARD replaced {d.type} with {typ}] Original rationale: {d.rationale}"
         prefs = None
         if c.turn == 1:
             prefs = self.preferences(c.disclosure)
@@ -208,7 +211,7 @@ class Agent:
             scenario_id=c.scenario_id, turn=c.turn, sender=self.role, type=typ, option_id=oid,
             acceptable=acceptable, vetoes=self.vetoes() if c.turn == 1 else [], preferences=prefs,
             counter_kind=counter_kind, claims=[Claim(kind=k) for k in d.claims if k == "min_fuel"],
-            evidence=self.checks[oid] if oid else [], rationale=d.rationale[:600],
+            evidence=self.checks[oid] if oid else [], rationale=rationale[:600],
             author=d.author or self.strategy, guard_notes=notes,
         )
 

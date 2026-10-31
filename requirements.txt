@@ -1,3 +1,9 @@
 pydantic>=2.7
 pytest>=8
 anthropic>=2.3   # LLM agents (workstream C)
+pandas>=2.2      # benchmark (workstream D)
+pyarrow>=15
+numpy>=1.26
+matplotlib>=3.8
+tabulate>=0.9
+streamlit>=1.40
