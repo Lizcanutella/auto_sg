@@ -11,17 +11,17 @@ from tracks.common import load_scenarios
 
 
 def test_benchmark_metrics_and_chart(tmp_path):
-    df = run(load_scenarios(), levels=["D0", "D2"], aggs=["nash"], out=tmp_path, workers=1)
+    df = run(load_scenarios(), levels=["D0", "D3"], aggs=["weighted_sum"], out=tmp_path, workers=1)
     df.to_parquet(tmp_path / "results.parquet")
     neg = df[df.system == "scripted"]
     assert len(neg) == 6 and neg.violations.sum() == 0
     assert set(df.system) == {"siloed", "fcfs", "best_possible", "scripted"}
-    ep1 = neg[(neg.scenario_id == "episode_001") & (neg.disclosure == "D2")].iloc[0]
-    assert ep1.gap_closed == 1.0 and ep1.gap_closed_fcfs == 1.0     # reaches the best possible plan
+    ep1 = neg[(neg.scenario_id == "episode_001") & (neg.disclosure == "D3")].iloc[0]
+    assert ep1.gap_closed == 1.0 and ep1.gap_closed_fcfs == 1.0     # all data shared: reaches the best plan
     md = metrics.to_markdown(tmp_path)
-    assert "Negotiation" in md and "| scripted | D2 | nash |" in md
+    assert "Negotiation" in md and "| scripted | D3 | weighted_sum |" in md
     assert charts.key_chart(tmp_path).exists()
-    again = run(load_scenarios(), levels=["D0", "D2"], aggs=["nash"], out=tmp_path, workers=1)
+    again = run(load_scenarios(), levels=["D0", "D3"], aggs=["weighted_sum"], out=tmp_path, workers=1)
     pd.testing.assert_series_equal(again.sort_values(["scenario_id", "system", "disclosure"]).global_cost_usd.reset_index(drop=True),
                                    df.sort_values(["scenario_id", "system", "disclosure"]).global_cost_usd.reset_index(drop=True))
 

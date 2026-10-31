@@ -127,7 +127,8 @@ class Agent:
         if level == "D0":
             return None
         if level == "D1":
-            return Preferences(level="D1", ranking=self.ranked(self.own_feasible))
+            levels = sorted({round(self.cost(o), 2) for o in self.own_feasible})   # ties share a rank
+            return Preferences(level="D1", ranks={o: levels.index(round(self.cost(o), 2)) for o in self.own_feasible})
         if level == "D2":
             return Preferences(level="D2", regret=self.true_regret())
         return Preferences(level="D3", private_data=getattr(self.view, self.role).model_dump(mode="json"))

@@ -170,10 +170,10 @@ class Mediator:
             return None
         out = {}
         for role, p in prefs.items():
-            if p.ranking is not None:
-                order = [o for o in p.ranking if o in J]
-                n = max(len(order) - 1, 1)
-                out[role] = {o: i / n for i, o in enumerate(order)}
+            if p.ranks is not None:
+                levels = sorted({p.ranks[o] for o in J if o in p.ranks})   # re-densify within J
+                n = max(len(levels) - 1, 1)
+                out[role] = {o: levels.index(p.ranks[o]) / n for o in J if o in p.ranks}
             elif p.regret is not None:
                 out[role] = {o: p.regret[o] for o in J if o in p.regret}
             elif p.private_data is not None:
@@ -198,8 +198,10 @@ class Mediator:
             return (s, dispatch[o])
         if self.aggregation == "maxmin":
             return (max(w[r] * regrets[r][o] for r in roles), sum(regrets[r][o] for r in roles), dispatch[o])
-        gains = [(regrets[r].get(F, 1.0) - regrets[r][o]) for r in roles]          # Nash, disagreement point = F
-        return (-sum(w[r] * math.log(max(g, 0.0) + NASH_EPS) for r, g in zip(roles, gains)), dispatch[o])
+        # Nash bargaining relative to the fallback F, smoothed: maximise sum w*log(1 + gain), gain in [-1, 1].
+        # A loss lowers the score (clipping losses to 0 would let an option that hurts two agents beat F).
+        gains = [(regrets[r].get(F, 1.0) - regrets[r][o]) for r in roles]
+        return (-sum(w[r] * math.log(max(1.0 + g, NASH_EPS)) for r, g in zip(roles, gains)), dispatch[o])
 
     def _individually_rational(self, J, regrets, F) -> list[str]:
         if regrets is None or self.acceptance != "rational":
