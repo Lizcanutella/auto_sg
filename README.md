@@ -63,7 +63,7 @@ Full table and assumptions: `PLAN.md` §3.7 and §5. Deviations from the workboo
 
 ## Known limits
 - Results so far are on 3 fixtures; A's real scenarios are pending.
-- The live LLM path has not run yet (the API key was rejected); it is tested with mock clients.
+- Live LLM agents have run on the 3 fixtures only (108 episodes, 0 violations); results vary between runs (see docs/RESULTS.md).
 - `sim/params.py` is not yet aligned with the constraints workbook (task B-10).
 - Scores at D2 are unit-free on purpose (privacy), which loses magnitude information (see failure case 1).
 - One focal flight per scenario; other arrivals keep their slots.

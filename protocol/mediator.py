@@ -53,16 +53,31 @@ def fallback_option(public: Scenario, feasible_ids: list[str]) -> str:
 
 class ClaimVerifier:
     """Independent check of verifiable claims (models an airline-to-ATC fuel data link / post-event
-    flight-data audit). Holds only the pilot's view; the mediator itself never sees it."""
+    flight-data audit). Holds only the pilot's view; the mediator itself never sees it.
+
+    Minimum fuel = even the best plan that still lands at the destination leaves less than
+    MIN_FUEL_MARGIN_MIN of holding fuel above the legal minimum (alternate + final reserve). If no
+    destination landing exists, the best diversion is used."""
 
     def __init__(self, pilot_view: Scenario):
         self.view = pilot_view
 
-    def verify(self, claim: Claim, fallback_id: str) -> tuple[bool, str]:
-        o = pilot_outcome(self.view, option_by_id(generate_options(self.view), fallback_id))
-        margin_min = (o.fuel_at_landing_kg - o.required_landing_fuel_kg) / self.view.pilot.holding_burn_kg_per_min
-        ok = margin_min < MIN_FUEL_MARGIN_MIN
-        return ok, f"fuel margin at fallback plan {margin_min:.1f} min of holding (threshold {MIN_FUEL_MARGIN_MIN:.0f})"
+    def margin_min(self) -> tuple[float, str]:
+        burn = self.view.pilot.holding_burn_kg_per_min
+        best: dict[bool, tuple[float, str]] = {}
+        for o in generate_options(self.view):
+            out = pilot_outcome(self.view, o)
+            m = (out.fuel_at_landing_kg - out.required_landing_fuel_kg) / burn
+            div = o.slot_min is None
+            if div not in best or m > best[div][0]:
+                best[div] = (m, o.option_id)
+        return best.get(False) or best[True]
+
+    def verify(self, claim: Claim, fallback_id: str | None = None) -> tuple[bool, str]:
+        m, oid = self.margin_min()
+        ok = m < MIN_FUEL_MARGIN_MIN
+        return ok, (f"best destination plan {oid} leaves {m:.1f} min of holding fuel above the legal minimum "
+                    f"(minimum-fuel threshold {MIN_FUEL_MARGIN_MIN:.0f})")
 
 
 @dataclass
@@ -219,7 +234,10 @@ class Mediator:
 
         for role, m in r1.items():
             for c in m.claims:
-                ok, detail = (self.verifier.verify(c, F) if self.verifier else (True, "not verified"))
+                if role != "pilot":   # only the flight crew can declare minimum fuel
+                    ok, detail = False, f"{role} cannot declare minimum fuel for the flight"
+                else:
+                    ok, detail = (self.verifier.verify(c, F) if self.verifier else (True, "not verified"))
                 self.claims.append({"role": role, "kind": c.kind, "accepted": ok, "detail": detail,
                                     "verified": self.verifier is not None})
                 if ok:
@@ -293,7 +311,8 @@ class Mediator:
             scenario_id=self.sid, status=status, option_id=oid, turns=turn, disclosure=self.disclosure,
             aggregation=self.aggregation, fallback_id=F, n_options=len(self.option_ids), n_feasible=nJ,
             reason=reason, invalid_messages=self.invalid,
-            guard_blocks=[g for a in self.agents.values() for g in getattr(a, "guard_log", [])],
+            guard_blocks=[g for a in self.agents.values() for g in getattr(a, "guard_log", [])
+                          if g.get("severity", "unsafe") == "unsafe"],
             claims=self.claims, messages=self.messages, log=self.log,
             strategies={r: getattr(a, "strategy", "?") for r, a in self.agents.items()},
             agent_stats={r: dict(getattr(a, "stats", {})) for r, a in self.agents.items()})

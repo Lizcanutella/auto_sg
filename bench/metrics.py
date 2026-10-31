@@ -151,11 +151,11 @@ def to_markdown(results: Path) -> str:
     llm = s[s.system == "llm"]
     if len(llm):
         lines.append("\n## LLM behaviour\n")
-        lines.append("| level | aggregation | N | fallback rate (per move) | unsupported numbers (per move) | "
+        lines.append("| level | aggregation | acceptance | N | fallback rate (per move) | unsupported numbers (per move) | "
                      "attempted unsafe | latency/episode (s) | tokens/episode | USD/episode |")
-        lines.append("|" + "---|" * 9)
+        lines.append("|" + "---|" * 10)
         for _, r in llm.iterrows():
-            lines.append(f"| {r.disclosure} | {r.aggregation} | {r.N} | {r.llm_fallback_rate:.0%} | "
+            lines.append(f"| {r.disclosure} | {r.aggregation} | {r.acceptance} | {r.N} | {r.llm_fallback_rate:.0%} | "
                          f"{r.llm_unsupported_numbers_rate:.0%} | {r.llm_attempted_unsafe} | "
                          f"{fmt_ci(r.llm_latency_s)} | {r.llm_tokens:,.0f} | ${r.llm_usd_per_episode:.4f} |")
         oc = over_concession(df)
