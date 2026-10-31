@@ -10,15 +10,15 @@ from pydantic import BaseModel, ConfigDict
 from contracts import WakeCategory as W
 
 # ---------------------------------------------------------------- wake separation
-# In-trail radar separation on final approach, nautical miles, (leader, follower).
-# Source: FAA JO 7110.65 §5-5-4 wake turbulence minima (legacy categories, not RECAT). VERIFY.
-WAKE_SOURCE = "FAA JO 7110.65 §5-5-4 (legacy wake categories)"
+# In-trail separation on final approach, nautical miles, (leader, follower).
+# Source: organiser workbook sheet `wake_separation` ("simplified from FAA JO 7110.65").
+# It has no B757 category, so B757 falls under "any other pair". tests/test_workbook.py checks this table.
+WAKE_SOURCE = "Organiser workbook `wake_separation` (simplified FAA JO 7110.65)"
 MIN_RADAR_SEPARATION_NM = 3.0
 WAKE_SEPARATION_NM: dict[tuple[W, W], float] = {
-    (W.SUPER, W.SUPER): 4.0, (W.SUPER, W.HEAVY): 6.0, (W.SUPER, W.B757): 7.0,
-    (W.SUPER, W.LARGE): 7.0, (W.SUPER, W.SMALL): 8.0,
-    (W.HEAVY, W.HEAVY): 4.0, (W.HEAVY, W.B757): 5.0, (W.HEAVY, W.LARGE): 5.0, (W.HEAVY, W.SMALL): 6.0,
-    (W.B757, W.SMALL): 4.0,
+    (W.SUPER, W.HEAVY): 6.0, (W.SUPER, W.LARGE): 7.0, (W.SUPER, W.SMALL): 8.0,
+    (W.HEAVY, W.HEAVY): 4.0, (W.HEAVY, W.LARGE): 5.0, (W.HEAVY, W.SMALL): 6.0,
+    (W.LARGE, W.SMALL): 4.0,
 }
 # ASSUMPTION: distance minima converted to time at a typical final-approach groundspeed.
 APPROACH_GROUNDSPEED_KT = 140.0
@@ -30,9 +30,11 @@ def wake_separation_min(leader: W, follower: W) -> float:
 
 
 # ---------------------------------------------------------------- other rule sources
-FUEL_SOURCE = ("ICAO Annex 6 Part I §4.3.6.3 final reserve fuel; landing fuel must still cover "
-               "the alternate (cf. 14 CFR 121.639)")
-DUTY_SOURCE = "14 CFR Part 117 flight duty period limits"
+FUEL_SOURCE = ("Organiser workbook `fuel_and_crew`: final reserve 30 min of holding fuel "
+               "(cf. ICAO Annex 6); plus alternate fuel when the scenario sets one")
+DUTY_SOURCE = "Organiser workbook `fuel_and_crew`: max 13 h duty from report (simplified 14 CFR Part 117)"
+GATE_NOTICE_SOURCE = "Organiser workbook `fuel_and_crew`: gate change notice at least 20 min before arrival"
+GATE_CHANGE_NOTICE_MIN = 20.0
 WEATHER_SOURCE = "FAA AC 00-24C thunderstorm avoidance"
 SLOT_SOURCE = "FAA Ground Delay Program slot list (ATCSCC)"
 CAPACITY_SOURCE = "Airport arrival rate (AAR) set by ATC traffic management"
@@ -61,7 +63,8 @@ class CostParams(BaseModel):
     turbulence_usd_per_min: float = 20.0        # shadow cost for pax comfort/injury risk. ASSUMPTION
     diversion_fixed_usd: float = 25_000.0       # handling, crew, pax care. ASSUMPTION
     # Ground handler
-    ramp_usd_per_crew_min: float = 1.0          # ~$60/h loaded labour. ASSUMPTION
+    ramp_usd_per_crew_min: float = 1.0          # ~$60/h loaded labour, normal time. ASSUMPTION
+    overtime_multiplier: float = 1.5            # organiser workbook: overtime costs 1.5x after the 8 h shift
     gate_change_usd: float = 300.0              # re-staffing, pax re-direction. ASSUMPTION
     knock_on_delay_usd_per_min: float = 50.0    # next-leg (turnaround) delay, same rate as delay
     # ATC (shadow costs: ATC pays no money, these encode workload and throughput)

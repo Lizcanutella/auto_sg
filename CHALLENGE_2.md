@@ -40,14 +40,32 @@ US Department of Transportation data for 2015 flight delays and cancellations.
 - Pass the parameters in that row into the 3 AI agents
 - Demonstrate how agents negotiate **revised arrival time, gate assignment, or flight plan adjustment in under 3 turns**
 
-#### Dataset notes (our own, verify once downloaded)
-This looks like the Kaggle "2015 Flight Delays and Cancellations" set (`flights.csv`, `airlines.csv`, `airports.csv`, about 5.8M rows). Expected columns in `flights.csv`:
+### Organiser update (31 Oct, after release)
+- **`flights.csv` added** (repo root): **358,774 rows** from 2015, already filtered to `WEATHER_DELAY > 15` or `LATE_AIRCRAFT_DELAY > 20`.
+- **Turn definition:** one turn = **each of the 3 agents sends one structured message**. Consensus within 3 turns, otherwise the **deterministic fallback decides, and the log says why**.
+- **Operational limits:** the DOT data has no gates, runways, fuel or crew. Use the new workbook **`challenge2_operational_constraints.xlsx`** (synthetic values; cited real figures also accepted). **Any limit we change must be stated in the demo.**
+- **Required output:** a revised arrival time, gate or flight plan, with a consensus log showing each turn.
+
+#### Workbook contents (`challenge2_operational_constraints.xlsx`)
+| Sheet | Content |
+|---|---|
+| `airport_capacity` | 323 airports: size class (Large / Medium / Small hub …), `active_runways`, `gates`, `max_runway_ops_per_hour` (arrivals + departures), `min_turnaround_min`, `spare_gates_at_any_time`. Marked **synthetic**, scaled from traffic in `flights.csv`. Large hub: 4 rwys, 150 gates, 90 ops/h, 45 min turnaround, 3 spare gates. Medium: 3, 70, 60, 35, 3. Small: 2, 30, 36, 35, 2. |
+| `wake_separation` | "Simplified from FAA JO 7110.65. Use these numbers for the ATC agent." Super→Heavy 6 NM, Super→Large 7, Super→Small 8, Heavy→Heavy 4, Heavy→Large 5, Heavy→Small 6, **Large→Small 4**, any other pair 3. No B757 category. |
+| `fuel_and_crew` | Final reserve **30 min of holding fuel** (never plan below). Contingency **5% of trip fuel**. Holding burn **2,400 kg/h narrowbody**, **6,500 kg/h widebody**. Assumed spare fuel on arrival **45 min of holding**. Flight crew max duty **13 h from report time**. Ground crew shift **8 h, overtime 1.5× after**. **Gate change notice ≥ 20 min before arrival.** |
+| `rules_of_play` | Input = one qualifying row; turn definition; fallback after 3 turns ("log why"); use the workbook limits; output = revised arrival time / gate / flight plan + consensus log. |
+
+#### Dataset notes (checked against the file)
+Columns are the Kaggle "2015 Flight Delays and Cancellations" `flights.csv` schema:
 `YEAR, MONTH, DAY, DAY_OF_WEEK, AIRLINE, FLIGHT_NUMBER, TAIL_NUMBER, ORIGIN_AIRPORT, DESTINATION_AIRPORT, SCHEDULED_DEPARTURE, DEPARTURE_TIME, DEPARTURE_DELAY, TAXI_OUT, WHEELS_OFF, SCHEDULED_TIME, ELAPSED_TIME, AIR_TIME, DISTANCE, WHEELS_ON, TAXI_IN, SCHEDULED_ARRIVAL, ARRIVAL_TIME, ARRIVAL_DELAY, DIVERTED, CANCELLED, CANCELLATION_REASON, AIR_SYSTEM_DELAY, SECURITY_DELAY, AIRLINE_DELAY, LATE_AIRCRAFT_DELAY, WEATHER_DELAY`
 
-Known gotchas:
-- In the Kaggle version, **October 2015 airport codes are 5-digit numeric IDs** instead of IATA codes. Filter out October or map the codes.
-- Times are `hhmm` integers (e.g. `1745`), not timestamps.
-- The data has **no gates, aircraft type, wake category, fuel on board, crew duty or pax connections**. Anything like that we add is **synthetic and must be labelled as such** (the rubric penalises hidden synthetic data). Same-day flights at the same airport and the `TAIL_NUMBER` chain (next leg of the same aircraft) are real signals we can use for connections, gate pressure and knock-on delay.
+What we measured:
+- Every row qualifies. **No October rows** (so the Kaggle numeric-airport-code issue doesn't arise), no cancelled/diverted rows, every row has a tail number.
+- 326,249 rows with `LATE_AIRCRAFT_DELAY > 20` and only **42,012 with `WEATHER_DELAY > 15`** (some rows have both). Stratify the sample or weather cases will be rare.
+- **It is not the full schedule**, only delayed flights. Consequences:
+  - Competing arrivals in the file are sparse (median 1 delayed arrival per airport-hour; ATL p90 = 9, max = 58 on storm days). The full arrival stream must be filled with labelled synthetic traffic.
+  - 42% of rows have a later same-day flight of the same tail in the file (95% of those depart from our destination): a **real** next leg with its **real** knock-on delay. For the other 58% the next leg is synthetic.
+- Times are `hhmm` integers. `SCHEDULED_DEPARTURE` is origin-local and `SCHEDULED_ARRIVAL` destination-local; use `SCHEDULED_TIME` to put both on the destination clock, and handle arrivals after midnight.
+- Still not in the data: aircraft type/wake category, fuel, crew, gates, connections. Gates, fuel and crew come from the workbook; aircraft class needs a stated heuristic (or the FAA registry). **Everything not from `flights.csv` must be labelled.**
 
 ---
 
@@ -112,13 +130,15 @@ Almost every credible multi-agent negotiation system for ATM/ops (in research an
 Message types usually follow FIPA-ACL performatives: `PROPOSE`, `COUNTER`, `ACCEPT`, `REJECT`, `INFORM`, plus `constraint_checks: [{rule_id, passed, value, limit}]` and a short `rationale`. Pydantic/JSON-schema validation on every message, with invalid messages counted as a reject.
 
 ### 3.3 Typical hard constraints per agent (encoded as rules, not prompts)
+For this challenge, **the organiser workbook's values take precedence** (see "Workbook contents" above).
+
 | Agent | Hard constraints (veto) | Soft objectives (scored) |
 |---|---|---|
-| ATC | Wake separation by category (ICAO: e.g. Medium behind Heavy ≈ 5 NM / ~2 min, Light behind Heavy ≈ 6 NM / ~3 min), runway/taxiway closed, runway hourly capacity | Throughput, total holding time |
-| Pilot | Fuel on landing ≥ final reserve (~30 min) + alternate + contingency, crew duty limits, no unsafe weather route | Fuel burn, turbulence exposure, passengers' missed connections |
-| Ground | Gate free and size-compatible, minimum turnaround time, crew shift end (overtime) | Gate utilisation, turnaround delay, towing moves |
+| ATC | Wake separation from the workbook table (e.g. Large behind Heavy 5 NM, Small behind Large 4 NM), runway/taxiway closed, runway hourly capacity (`max_runway_ops_per_hour`) | Throughput, total holding time |
+| Pilot | Fuel on landing ≥ 30 min final reserve (workbook), crew duty ≤ 13 h from report, no unsafe weather route | Fuel burn, turbulence exposure, passengers' missed connections |
+| Ground | Gate free and size-compatible, minimum turnaround (per airport), gate change notified ≥ 20 min before arrival | Gate utilisation, turnaround delay, crew overtime (1.5× after an 8 h shift) |
 
-Numbers like reserves and separation should cite their source (ICAO Doc 4444, FAA JO 7110.65, 14 CFR 121.639) in the log. That covers the "trace to an applied rule" part of Trust and traceability.
+Each limit should cite where it comes from in the log: the workbook sheet, plus the underlying regulation (FAA JO 7110.65, 14 CFR Part 117). That covers the "trace to an applied rule" part of Trust and traceability.
 
 ### 3.4 Deterministic fallback options
 - First-come-first-served slot + first available compatible gate (mirrors today's behaviour, so it doubles as the **baseline**).

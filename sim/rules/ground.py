@@ -1,4 +1,5 @@
-"""Ground-handling hard constraints: gate free, gate size, gate airline, ramp crew overtime cap."""
+"""Ground-handling hard constraints: gate free, gate size, gate airline, gate-change notice,
+ramp crew overtime cap."""
 from __future__ import annotations
 
 from contracts import SIZE_ORDER, Option, RuleResult, Scenario, Timeline
@@ -7,7 +8,7 @@ from sim.rules._common import not_applicable, rule
 from sim.simulate import EPS, compute_timeline, get_gate, ground_outcome
 
 ROLE = "ground"
-RULE_IDS = ("GND-GATE-FREE", "GND-GATE-SIZE", "GND-GATE-AIRLINE", "GND-CREW")
+RULE_IDS = ("GND-GATE-FREE", "GND-GATE-SIZE", "GND-GATE-AIRLINE", "GND-NOTICE", "GND-CREW")
 
 
 def check(view: Scenario, option: Option, tl: Timeline | None = None) -> list[RuleResult]:
@@ -20,6 +21,7 @@ def check(view: Scenario, option: Option, tl: Timeline | None = None) -> list[Ru
     focal = view.public.focal
     gate = get_gate(view.public, option.gate_id)
     size_ok = SIZE_ORDER[gate.size] >= SIZE_ORDER[focal.size_class]
+    notice = tl.in_block_min - view.public.decision_time_min
     return [
         rule(ROLE, "GND-GATE-FREE", o.gate_conflict_with is None, None, None, "", params.GATE_SOURCE,
              f"gate {gate.gate_id} " + (f"occupied by {o.gate_conflict_with}" if o.gate_conflict_with else "is free")),
@@ -27,6 +29,10 @@ def check(view: Scenario, option: Option, tl: Timeline | None = None) -> list[Ru
              f"gate {gate.gate_id} takes up to {gate.size.value}, aircraft is {focal.size_class.value}"),
         rule(ROLE, "GND-GATE-AIRLINE", gate.airline in (focal.airline, "COMMON"), None, None, "",
              params.GATE_SOURCE, f"gate {gate.gate_id} belongs to {gate.airline}"),
+        rule(ROLE, "GND-NOTICE", not o.gate_changed or notice >= params.GATE_CHANGE_NOTICE_MIN - EPS,
+             round(notice, 1), params.GATE_CHANGE_NOTICE_MIN, "min", params.GATE_NOTICE_SOURCE,
+             f"gate change from {g.planned_gate_id} with {notice:.0f} min notice before arrival"
+             if o.gate_changed else "planned gate kept, no notice needed"),
         rule(ROLE, "GND-CREW", o.overtime_min <= g.max_overtime_min + EPS, round(o.overtime_min, 1),
              g.max_overtime_min, "min", params.CREW_SOURCE, "ramp crew overtime vs cap"),
     ]

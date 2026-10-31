@@ -37,7 +37,8 @@ def earliest_landing_min(public: PublicInfo, route: RouteOption) -> float:
     """Earliest possible landing on `route` with no delay absorbed."""
     if public.decision_point == "pre_departure":
         f = public.focal
-        wheels_off = max(public.decision_time_min, f.sched_departure_min) + f.taxi_out_min
+        off_block = max(public.decision_time_min, f.sched_departure_min, public.ready_min or 0.0)
+        wheels_off = off_block + f.taxi_out_min
         return wheels_off + route.air_time_min
     return public.decision_time_min + route.air_time_min
 
@@ -100,8 +101,7 @@ def atc_outcome(view: Scenario, option: Option, tl: Timeline | None = None) -> A
     followers = [a for a in atc.arrival_sequence if a.slot_min > t]
     leader = max(leaders, key=lambda a: a.slot_min, default=None)
     follower = min(followers, key=lambda a: a.slot_min, default=None)
-    hour = (t // 60) * 60
-    in_hour = sum(1 for a in atc.arrival_sequence if hour <= a.slot_min < hour + 60) + 1
+    in_hour = sum(1 for a in atc.arrival_sequence if t - 60 < a.slot_min <= t) + 1  # rolling 60 min incl. us
     return ATCOutcome(
         leader_gap_min=None if leader is None else t - leader.slot_min,
         leader_required_min=None if leader is None else wake_separation_min(leader.wake_category, me),
@@ -149,10 +149,12 @@ def ground_outcome(view: Scenario, option: Option, tl: Timeline | None = None) -
          if b.gate_id == option.gate_id and b.start_min < release and tl.in_block_min < b.end_min),
         None,
     )
+    # The crew on shift at block-in finishes the turn; arriving after shift end, the next shift takes it.
+    overtime = max(0.0, ready - g.crew_shift_end_min) if tl.in_block_min < g.crew_shift_end_min else 0.0
     return GroundOutcome(
         gate_conflict_with=conflict,
         gate_changed=option.gate_id != g.planned_gate_id,
-        overtime_min=max(0.0, ready - g.crew_shift_end_min),
+        overtime_min=overtime,
         next_leg_delay_min=next_delay,
     )
 
