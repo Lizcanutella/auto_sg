@@ -1,12 +1,13 @@
 # 3-minute pitch: slide content and speaker notes (D-8)
 
-Follows `PLAN.md` §9. Numbers marked ⟨…⟩ must be filled from `results/metrics.md` after the run on A's scenarios. **Do not present fixture numbers as results.**
+Follows `PLAN.md` §9. Numbers are from the 500-scenario run (`docs/RESULTS.md`). All costs are simulated; say so.
 
 ---
 
 ### 1. The problem (0:00–0:20)
 **Title:** When weather cuts capacity, three organisations fix it by phone.
-- Hub duty manager. Thunderstorms cut the arrival rate by 25–40%.
+- Hub duty manager. Weather cuts the arrival rate, or the inbound aircraft is late.
+- In **56%** of 481 real-row disruptions, today's siloed process costs more than the best plan.
 - ATC knows runway capacity and separation. The airline knows fuel and connections. The ground handler knows gates and crew.
 - Today: Ration-by-Schedule slots, then phone calls and manual gate boards.
 
@@ -15,32 +16,37 @@ Follows `PLAN.md` §9. Numbers marked ⟨…⟩ must be filled from `results/met
 ### 2. The insight (0:20–0:50)
 **Title:** Each agent keeps its own data. What does that cost?
 - 3 agents, each seeing only its own organisation's data.
-- Compared against today's process (FCFS) and a solver that sees everything.
+- Compared against today's siloed process, FCFS with shared data, and a solver that sees everything.
 - Key question: how much must each organisation share to close the gap?
 
 *Notes:* this is the A-CDM / UDPP debate. Airlines don't want to reveal costs.
 
 ### 3. Live demo (0:50–1:40)
-Show the UI replaying `results/demo_blocked_unsafe.jsonl`, or a real-scenario equivalent picked from A's data.
-- Turn 1: vetoes with rule IDs (✅/❌ chips).
-- Turn 2: an attacker pushes ATC to accept gate T5. **The guard blocks it** (`ATC-TWY`: taxiway closed).
-- Turn 3: consensus on 19:06 at gate B7. The duty manager clicks **Approve**, and it goes into the hash-chained log.
+UI → Replay a log → `results/demo_real_A0266.jsonl`. **JetBlue B6667 MCO → PSE, 30 Dec 2015**, inbound aircraft 35 min late (real row).
+- Today's siloed process: departs on time, holds **24 min**, $5,473.
+- Turn 1: vetoes with rule IDs (✅/❌ chips): 9 of 68 options survive.
+- Turn 2: an attacker pushes ATC to accept an unsafe slot. **The guard blocks it.**
+- Turn 3: consensus on ground delay, gate A40: **$3,985, the best possible plan**, $1,488 and 24 min of holding saved. The duty manager clicks **Approve**, and it goes into the hash-chained log.
+- Live Claude agents on the same row: same plan in 2 turns.
 
 *Notes:* say "the LLM chooses moves; code computes every number and enforces every rule."
 
 ### 4. Results (1:40–2:30)
-- Key chart: `results/charts/gap_vs_disclosure.png`. Gap closed by disclosure level, scripted vs LLM.
-- ⟨N⟩ scenarios · gap closed at D0 ⟨x%⟩ → D2 ⟨y%⟩ → D3 ⟨z%⟩ · **0 violations** · consensus ⟨c%⟩, fallback ⟨f%⟩, escalation ⟨e%⟩ · median ⟨t⟩ turns.
-- Adversarial: unsafe moves attempted ⟨a%⟩, blocked 100%, final-plan violations 0.
-- LLM vs scripted: ⟨over-concession, $/episode, latency⟩.
+- Key chart: `results/charts/gap_vs_disclosure.png`. Gap closed vs today's siloed process, by disclosure level.
+- 500 real-row scenarios (271 with a gap): **vetoes only 83% → rankings 96–98% → all data 96–100%** (FCFS with shared data: 85%).
+- **0 violations in 18,120 episodes**; every episode ends in ≤ 3 turns (consensus in turn 2); escalation correct 100% (19 scenarios have no safe plan).
+- Per flight: holding 3.8 → 0 min, extra fuel 231 → 74 kg (simulated).
+- Adversarial: worst-case LLM attempted unsafe moves in 40% of 240 cases, all blocked; live Claude followed 0 of 240.
+- Live Claude Haiku 5.5: same plan as scripted in 92% of pairs, ~$0.003 per episode; it falsely claimed minimum fuel 88 times, and all were rejected.
 
 ### 5. Where it fails (2:30–2:50)
-- More information can give a worse result: at D2 with weighted sum, unit-free scores hide that ATC's loss is only $300 (`docs/RESULTS.md`, failure case 1).
+- Vetoes only can be worse than today (6 of 3,252 episodes): the mediator doesn't know the planned gate and picks another, costing $300. Fix: break ties by the agents' first choices.
+- Unit-free scores hide dollar magnitudes (a $300 loss can look as big as $1,500 of savings).
 - The system declines when nothing is safe (escalation; Approve is disabled).
 - Synthetic inputs: gate layout, passenger counts, weather factor (see the provenance table).
 
 ### 6. Impact and next step (2:50–3:00)
-- With ⟨level⟩ sharing, agents recover ⟨x%⟩ of the gap, about ⟨$ / min⟩ per disruption (simulated, not measured).
+- Sharing rankings or scores recovers 96–98% of the price of silos: about $410 and 3.8 min of holding per disrupted flight at D2 (simulated, not measured).
 - Deployment needs A-CDM data feeds, airline cost data under UDPP-style privacy, and certification. ATC authority stays with humans.
 
 ---

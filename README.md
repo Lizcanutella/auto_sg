@@ -2,7 +2,7 @@
 
 **Airbus Track, Challenge #2 · Autonomous SG 2026.** Three AI agents, for air traffic control, the airline/pilot and the ground handler, negotiate how to handle a disrupted flight: revised arrival time, gate and flight plan. They do it in at most 3 turns, and each agent sees only its own organisation's data. A deterministic mediator runs the protocol, rule checkers enforce safety, and a duty manager approves the result.
 
-We also ask the question the A-CDM and UDPP debates ask: **how much does each organisation need to share to get most of the benefit?** Our benchmark compares the negotiated plan with three references on 500 scenarios built from real DOT rows: **today's siloed process** (each organisation decides its own part with its own data and phones when a limit breaks), **FCFS/RBS with data shared** (simple dispatch rules, no optimisation), and a **solver that sees everyone's data**.
+We also ask the question the A-CDM and UDPP debates ask: **how much does each organisation need to share to get most of the benefit?** Our benchmark compares the negotiated plan with today's siloed process (each organisation decides alone, and they phone only when a limit breaks), with FCFS/RBS (shared data, simple rules) and with a solver that sees everyone's data.
 
 ## User and status quo
 - **User:** the airline hub duty manager, working with the approach-control traffic manager and ramp/gate control.
@@ -41,14 +41,21 @@ pip install -r requirements.txt            # + streamlit, pandas, matplotlib, py
 pytest -q                                   # simulator, protocol, guards, log, tracks
 python -m protocol.run fixtures/episode_001.json --level D2 --agg nash --decision APPROVE
 streamlit run ui/app.py                     # run or replay negotiations; Approve / Override
-python -m bench.run --tracks                # benchmark → results/results.parquet (+ tracks C, D)
+python -m bench.run --scenarios data/scenarios.jsonl --tracks   # benchmark → results/results.parquet
 python -m bench.metrics                     # → results/metrics.md (N, 95% bootstrap CIs)
-python -m bench.charts --sensitivity        # → results/charts/*.png, results/sensitivity.md
+python -m bench.charts --sensitivity --scenarios data/scenarios.jsonl --limit 200
 ```
 LLM agents: put `ANTHROPIC_API_KEY=...` in `.env` (git-ignored), then use `--agents llm`, or `--llm-subset N` for the benchmark.
 
-## Results
-See **[docs/RESULTS.md](docs/RESULTS.md)**. That file holds the demo case, the failure cases, and the adversarial and misreporting tracks. **They currently cover only the 3 synthetic fixtures** and will be regenerated on workstream A's scenarios.
+## Results (500 real-row scenarios, simulated costs)
+Full write-up, demo and failure cases: **[docs/RESULTS.md](docs/RESULTS.md)**. Tables: `results/metrics.md`.
+
+- **The price of silos is real:** in 56% of scenarios (271 of 481 solvable) today's siloed process costs more than the best plan.
+- **Negotiation recovers most of it:** vetoes only (D0) close **83%** of the gap; adding a ranking (D1) or scores (D2) closes **96–98%**; full data (D3) **96–100%**. FCFS with full data sharing closes 85%.
+- **Safety:** **0 hard-constraint violations** in 18,120 negotiated episodes. The system escalates exactly when no safe plan exists (19 scenarios), and in 240 adversarial cases with a worst-case LLM the guard blocked every unsafe move.
+- **Per disrupted flight (D2, Nash):** airborne holding 3.8 → 0.0 min, extra fuel 231 → 74 kg, simulated cost $7,948 → $7,537.
+- **Live Claude Haiku 5.5 agents** (120 episodes): 0 violations, same plan as scripted agents in 92% of pairs, ~$0.003 and ~13 s per episode. They falsely claimed minimum fuel 88 times; every claim was rejected by verification.
+- **Where it fails:** vetoes-only can pick a worse gate than today's process (6 of 3,252 episodes), and unit-free scores hide dollar magnitudes. Both are explained, with fixes, in the results doc.
 
 ## Data provenance
 Every scenario carries a `provenance` map (field → `real` / `real_derived` / `organiser` / `synthetic`), and every synthetic flight ID starts with `SYN-`.
@@ -70,11 +77,14 @@ Every scenario carries a `provenance` map (field → `real` / `real_derived` / `
 Full table and reasoning: `PLAN.md` §3.7 and §5. `tests/test_scenarios.py` checks the simulator's values against the workbook.
 
 ## Known limits
+- Costs are simulated with our cost model (`sim/params.py`, cited figures), not measured airline costs.
 - `flights.csv` holds only delayed flights, so most of each arrival stream is synthetic filler, and a next flight appears only when it was itself delayed.
 - Aircraft type is not in the data; size and wake category come from a heuristic.
 - The siloed baseline assumes slot updates reach the airline too late, so it absorbs delay by holding in the air unless fuel or the holding stack forces ground delay.
-- Scores at D2 are unit-free on purpose (privacy), which loses magnitude information (see failure case 1).
-- One focal flight per scenario; other arrivals keep their slots.
+- Scores at D2 are unit-free on purpose (privacy), which loses magnitude information.
+- One focal flight negotiates per scenario; other arrivals keep their slots.
+- Live LLM results cover 30 scenarios with one run each; treat them as indicative.
+- Knock-on delay is an upper bound: the workbook's minimum turnaround (35–45 min) is longer than real late aircraft take (median 29 min; `results/sim_validity.md`).
 
 ## Layout
 `contracts.py` shared schemas · `scenarios/` builder (`flights.csv` + workbook → `data/scenarios.jsonl`; `python -m scenarios.sample --n 500`) · `sim/` simulator, rules, costs · `baselines/` siloed, FCFS and best possible · `agents/` scripted, LLM, mock LLM · `protocol/` messages, mediator, log, CLI · `tracks/` adversarial, misreporting · `bench/` runner, metrics, charts · `ui/` Streamlit · `docs/` results, slides · `fixtures/` hand-made scenarios.

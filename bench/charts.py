@@ -86,7 +86,7 @@ def gap_chart(df: pd.DataFrame, path: Path, label_col: str, labels: list, title:
         ax.set_ylim(-0.05, 1.08)
         ax.set_yticks([0, 0.25, 0.5, 0.75, 1.0], ["0%", "25%", "50%", "75%", "100%"])
         ax.axhline(0, color=INK_2, linewidth=0.8)
-    axes[0].set_ylabel("Gap closed\n(0% = FCFS, 100% = best possible)", fontsize=9, color=INK_2)
+    axes[0].set_ylabel("Gap closed\n(0% = today's siloed process,\n100% = best possible)", fontsize=9, color=INK_2)
     handles, labs = axes[0].get_legend_handles_labels()
     if not handles:
         for ax in axes[1:]:
@@ -108,10 +108,11 @@ def gap_chart(df: pd.DataFrame, path: Path, label_col: str, labels: list, title:
 def key_chart(results: Path, acceptance: str = "budget") -> Path:
     df = pd.read_parquet(results / "results.parquet")
     df = df[df.system.isin(["scripted", "llm"]) & (df.acceptance == acceptance)]
-    n = df[df.gap_closed.notna()].scenario_id.nunique()
     labels = [s for s in ("scripted", "llm") if s in set(df.system)]
-    sub = (f"{n} scenario(s) with a gap to close; bands = 95% bootstrap CI; acceptance policy: {acceptance}"
-           + ("" if "llm" in labels else "; LLM agents not run yet"))
+    ns = {lab: df[(df.system == lab) & df.gap_closed.notna()].scenario_id.nunique() for lab in labels}
+    sub = (" · ".join(f"{lab}: {n} scenarios with a gap to close" for lab, n in ns.items())
+           + f" · bands = 95% bootstrap CI · acceptance: {acceptance}"
+           + ("" if "llm" in labels else " · LLM agents not run yet"))
     return gap_chart(df, results / "charts" / "gap_vs_disclosure.png", "system", labels,
                      "How much does each organisation need to share?", sub)
 
